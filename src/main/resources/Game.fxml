@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane prefHeight="650.0" prefWidth="900.0"
+            style="-fx-background-color: #121214;"
+            xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="cz.panacku.zlobse.GameController">
+
+    <!-- HORNÍ LIŠTA (Bez nadpisu) -->
+    <top>
+        <HBox alignment="CENTER_LEFT" style="-fx-background-color: #1c1c1e; -fx-border-color: #2c2c2e; -fx-border-width: 0 0 1 0;" BorderPane.alignment="CENTER">
+            <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
+            <children>
+                <Button text="← Zpět do Menu" onAction="#zpetDoMenu" prefHeight="32.0" prefWidth="130.0"
+                        style="-fx-background-color: #2c2c2e; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6px; -fx-cursor: hand;" />
+            </children>
+        </HBox>
+    </top>
+
+    <!-- STŘED: ZVĚTŠENÁ OBDÉLNÍKOVÁ DESKA A KOSTKA -->
+    <center>
+        <VBox alignment="CENTER" spacing="12.0" BorderPane.alignment="CENTER">
+            <children>
+                <!-- Obdélníkový kontejner pro herní desku -->
+                <StackPane prefHeight="440.0" prefWidth="760.0" maxWidth="760.0" maxHeight="440.0"
+                           style="-fx-background-color: #1c1c1e; -fx-border-color: #FFD700; -fx-border-width: 2px; -fx-border-radius: 8px; -fx-background-radius: 8px;">
+                    <children>
+                        <ImageView fitHeight="430.0" fitWidth="750.0" pickOnBounds="true" preserveRatio="true">
+                            <image>
+                                <Image url="@images/board.png" />
+                            </image>
+                        </ImageView>
+                    </children>
+                </StackPane>
+
+                <!-- Tlačítko pro hod kostkou -->
+                <Button text="🎲 HODIT KOSTKOU" onAction="#hoditKostkou" prefWidth="220.0" prefHeight="40.0"
+                        style="-fx-background-color: #2ed573; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-cursor: hand;" />
+            </children>
+            <padding>
+                <Insets top="5.0" bottom="5.0" />
+            </padding>
+        </VBox>
+    </center>
+
+    <!-- DOLNÍ LIŠTA: VYROVNANÝ INVENTÁŘ A SCHOPNOST -->
+    <bottom>
+        <GridPane style="-fx-background-color: #1c1c1e; -fx-border-color: #2c2c2e; -fx-border-width: 1 0 0 0;" BorderPane.alignment="CENTER">
+            <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
+            <columnConstraints>
+                <ColumnConstraints percentWidth="33.3" />
+                <ColumnConstraints percentWidth="33.4" />
+                <ColumnConstraints percentWidth="33.3" />
+            </columnConstraints>
+            <children>
+
+                <!-- Levý prázdný prostor pro vyvážení mřížky -->
+                <HBox alignment="CENTER_LEFT" GridPane.columnIndex="0" />
+
+                <!-- MINECRAFT INVENTÁŘ UPROSTŘED -->
+                <HBox alignment="CENTER" spacing="8.0" GridPane.columnIndex="1">
+                    <children>
+                        <!-- Slot 1 -->
+                        <StackPane prefHeight="50.0" prefWidth="50.0"
+                                   style="-fx-background-color: #8b8b8b; -fx-border-color: #373737 #ffffff #ffffff #373737; -fx-border-width: 3px;">
+                            <children>
+                                <StackPane style="-fx-background-color: #8b8b8b; -fx-padding: 3;">
+                                    <children>
+                                        <ImageView fx:id="itemSlot1" fitHeight="36.0" fitWidth="36.0" pickOnBounds="true" preserveRatio="true" />
+                                    </children>
+                                </StackPane>
+                            </children>
+                        </StackPane>
+
+                        <!-- Slot 2 -->
+                        <StackPane prefHeight="50.0" prefWidth="50.0"
+                                   style="-fx-background-color: #8b8b8b; -fx-border-color: #373737 #ffffff #ffffff #373737; -fx-border-width: 3px;">
+                            <children>
+                                <StackPane style="-fx-background-color: #8b8b8b; -fx-padding: 3;">
+                                    <children>
+                                        <ImageView fx:id="itemSlot2" fitHeight="36.0" fitWidth="36.0" pickOnBounds="true" preserveRatio="true" />
+                                    </children>
+                                </StackPane>
+                            </children>
+                        </StackPane>
+
+                        <!-- Slot 3 -->
+                        <StackPane prefHeight="50.0" prefWidth="50.0"
+                                   style="-fx-background-color: #8b8b8b; -fx-border-color: #373737 #ffffff #ffffff #373737; -fx-border-width: 3px;">
+                            <children>
+                                <StackPane style="-fx-background-color: #8b8b8b; -fx-padding: 3;">
+                                    <children>
+                                        <ImageView fx:id="itemSlot3" fitHeight="36.0" fitWidth="36.0" pickOnBounds="true" preserveRatio="true" />
+                                    </children>
+                                </StackPane>
+                            </children>
+                        </StackPane>
+                    </children>
+                </HBox>
+
+                <!-- SCHOPNOST VPRAVO -->
+                <HBox alignment="CENTER_RIGHT" GridPane.columnIndex="2">
+                    <children>
+                        <Button text="⚡ Použít schopnost"
+                                style="-fx-background-color: #ff4757; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 6px; -fx-cursor: hand;"
+                                prefHeight="45.0" />
+                    </children>
+                </HBox>
+
+            </children>
+        </GridPane>
+    </bottom>
+</BorderPane>
