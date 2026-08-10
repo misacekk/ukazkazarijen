@@ -28,7 +28,7 @@ public class App extends Application {
             Parent root = loader.load();
 
             if (primaryStage.getScene() == null) {
-                primaryStage.setScene(new Scene(root, 1800, 1000));
+                primaryStage.setScene(new Scene(root, 1600, 1000));
             } else {
                 primaryStage.getScene().setRoot(root);
             }
