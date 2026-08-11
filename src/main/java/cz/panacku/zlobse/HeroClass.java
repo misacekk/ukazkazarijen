@@ -1,42 +1,28 @@
 package cz.panacku.zlobse;
 
 public enum HeroClass {
-    NEKROMANT("Nekromant", "N", 55, 55, 0),
-    KOUZELNIK("Kouzelník", "K", 1145, 55, 5),
-    BANDITA("Bandita", "B", 1145, 645, 10),
-    RYTIR("Rytíř", "R", 55, 645, 15);
+    RYTIR("Rytíř", 15, 60, 535, "rytir.png"),
+    KOUZELNIK("Kouzelník", 5, 1140, 60, "mag.png"),
+    BANDITA("Bandita", 10, 1140, 535, "bandita.png"),
+    NEKROMANT("Nekromant", 0, 60, 60, "nekromant.png");
 
     private final String name;
-    private final String homeCode;
+    private final int startIndex;
     private final double homeX;
     private final double homeY;
-    private final int startIndex;
+    private final String imageFileName;
 
-    HeroClass(String name, String homeCode, double homeX, double homeY, int startIndex) {
+    HeroClass(String name, int startIndex, double homeX, double homeY, String imageFileName) {
         this.name = name;
-        this.homeCode = homeCode;
+        this.startIndex = startIndex;
         this.homeX = homeX;
         this.homeY = homeY;
-        this.startIndex = startIndex;
+        this.imageFileName = imageFileName;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public String getHomeCode() {
-        return homeCode;
-    }
-
-    public double getHomeX() {
-        return homeX;
-    }
-
-    public double getHomeY() {
-        return homeY;
-    }
-
-    public int getStartIndex() {
-        return startIndex;
-    }
+    public String getName() { return name; }
+    public int getStartIndex() { return startIndex; }
+    public double getHomeX() { return homeX; }
+    public double getHomeY() { return homeY; }
+    public String getImageFileName() { return imageFileName; }
 }

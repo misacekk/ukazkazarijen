@@ -1,10 +1,14 @@
 package cz.panacku.zlobse;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Player {
     private final HeroClass heroClass;
     private boolean inHouse;
     private int currentTileIndex;
     private boolean hasRolledThisTurn;
+    private final List<Item> inventory = new ArrayList<>();
 
     public Player(HeroClass heroClass) {
         this.heroClass = heroClass;
@@ -31,6 +35,18 @@ public class Player {
 
     public void setHasRolledThisTurn(boolean status) {
         this.hasRolledThisTurn = status;
+    }
+
+    public List<Item> getInventory() {
+        return inventory;
+    }
+
+    public boolean addItem(Item item) {
+        if (inventory.size() < 3) {
+            inventory.add(item);
+            return true;
+        }
+        return false;
     }
 
     public void stepToTile(int newIndex) {

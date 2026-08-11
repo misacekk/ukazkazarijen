@@ -3,6 +3,8 @@ package cz.panacku.zlobse;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -10,11 +12,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.util.Duration;
 
 import java.io.InputStream;
+import java.util.List;
 import java.util.Random;
 
 public class GameController {
@@ -31,45 +32,28 @@ public class GameController {
     @FXML private ImageView itemSlot3;
 
     private Pane tokenLayer;
-    private Circle playerToken;
+    private ImageView playerToken; // Změněno z Circle na ImageView
     private Player player;
     private final Random random = new Random();
 
+    private static final double TOKEN_SIZE = 40.0; // Velikost figurky hrdiny na desce
+
     @FXML
     public void initialize() {
-        // Herní deska se vykreslí ihned na pozadí
         if (gameContent != null) gameContent.setVisible(true);
         setupBoardUI();
 
-        // Výběr postav se zobrazí v popředí přes desku
         if (selectionContainer != null) selectionContainer.setVisible(true);
-
-        // Dolní lišta se odkryje až po výboru postavy
         if (bottomBar != null) bottomBar.setVisible(false);
         if (itemSelectionOverlay != null) itemSelectionOverlay.setVisible(false);
     }
 
     // --- HANDLERY PRO VOLBU HRDINŮ ---
 
-    @FXML
-    private void zvolitRytire() {
-        selectHero(HeroClass.RYTIR);
-    }
-
-    @FXML
-    private void zvolitKouzelnika() {
-        selectHero(HeroClass.KOUZELNIK);
-    }
-
-    @FXML
-    private void zvolitBanditu() {
-        selectHero(HeroClass.BANDITA);
-    }
-
-    @FXML
-    private void zvolitNekromanta() {
-        selectHero(HeroClass.NEKROMANT);
-    }
+    @FXML private void zvolitRytire() { selectHero(HeroClass.RYTIR); }
+    @FXML private void zvolitKouzelnika() { selectHero(HeroClass.KOUZELNIK); }
+    @FXML private void zvolitBanditu() { selectHero(HeroClass.BANDITA); }
+    @FXML private void zvolitNekromanta() { selectHero(HeroClass.NEKROMANT); }
 
     // --- HANDLERY PRO HRU A OVLÁDÁNÍ ---
 
@@ -97,6 +81,7 @@ public class GameController {
     @FXML
     private void pouzitPredmet() {
         if (itemSelectionOverlay != null) {
+            populateItemSelectionOverlay();
             itemSelectionOverlay.setVisible(true);
         }
     }
@@ -125,11 +110,17 @@ public class GameController {
     private void selectHero(HeroClass selectedHero) {
         player = new Player(selectedHero);
 
-        // Skryje overlay s výběrem postav a zobrazí dolní lištu (inventář, kostku)
         if (selectionContainer != null) selectionContainer.setVisible(false);
         if (bottomBar != null) bottomBar.setVisible(true);
 
+        // Načtení obrázku zvoleného hrdiny
+        InputStream is = getClass().getResourceAsStream("/images/" + selectedHero.getImageFileName());
+        if (is != null && playerToken != null) {
+            playerToken.setImage(new Image(is));
+        }
+
         updateTokenPosition();
+        updateInventoryUI();
 
         if (statusLabel != null) {
             statusLabel.setText("Na tahu: " + player.getHeroClass().getName());
@@ -142,15 +133,9 @@ public class GameController {
         boardContainer.getChildren().clear();
 
         ImageView boardImage = new ImageView();
-
-        // Zkustí načíst obrázek z classpath (složka resources)
         InputStream is = getClass().getResourceAsStream("/images/board.png");
-
         if (is != null) {
             boardImage.setImage(new Image(is));
-            System.out.println("Obrázek desky byl úspěšně načten.");
-        } else {
-            System.err.println("CHYBA: Soubor /herni_deska.png nebyl nalezen ve složce resources!");
         }
 
         boardImage.setFitWidth(1200);
@@ -161,10 +146,11 @@ public class GameController {
         tokenLayer.setPrefSize(1200, 700);
         tokenLayer.setMaxSize(1200, 700);
 
-        playerToken = new Circle(14);
-        playerToken.setFill(Color.RED);
-        playerToken.setStroke(Color.WHITE);
-        playerToken.setStrokeWidth(2.5);
+        // Vytvoření ImageView pro figurku
+        playerToken = new ImageView();
+        playerToken.setFitWidth(TOKEN_SIZE);
+        playerToken.setFitHeight(TOKEN_SIZE);
+        playerToken.setPreserveRatio(true);
 
         tokenLayer.getChildren().add(playerToken);
         boardContainer.getChildren().addAll(boardImage, tokenLayer);
@@ -188,21 +174,112 @@ public class GameController {
 
         timeline.setOnFinished(event -> {
             player.setHasRolledThisTurn(false);
+
+            // Kontrola dopadu na truhlu (index 4 nebo index 15)
+            if (!player.isInHouse() && BoardPath.isItemTile(player.getCurrentTileIndex())) {
+                if (player.getInventory().size() < 3) {
+                    Item newItem = Item.getRandomItem();
+                    player.addItem(newItem);
+                    updateInventoryUI();
+                    if (statusLabel != null) {
+                        statusLabel.setText("Našel jsi truhlu! Získal jsi: " + newItem.getName());
+                    }
+                } else if (statusLabel != null) {
+                    statusLabel.setText("Našel jsi truhlu, ale inventář máš plný!");
+                }
+            }
         });
 
         timeline.play();
     }
 
+    private void updateInventoryUI() {
+        if (player == null) return;
+
+        ImageView[] slots = {itemSlot1, itemSlot2, itemSlot3};
+        List<Item> inventory = player.getInventory();
+
+        for (int i = 0; i < slots.length; i++) {
+            if (slots[i] == null) continue;
+
+            if (i < inventory.size()) {
+                Item item = inventory.get(i);
+                InputStream is = getClass().getResourceAsStream("/images/" + item.getImageFileName());
+                if (is != null) {
+                    slots[i].setImage(new Image(is));
+                } else {
+                    slots[i].setImage(null);
+                }
+            } else {
+                slots[i].setImage(null);
+            }
+        }
+    }
+
+    private void populateItemSelectionOverlay() {
+        if (itemCardsContainer == null || player == null) return;
+
+        itemCardsContainer.getChildren().clear();
+        List<Item> inventory = player.getInventory();
+
+        if (inventory.isEmpty()) {
+            Label emptyLabel = new Label("V inventáři zatím nemáš žádné předměty.");
+            emptyLabel.setStyle("-fx-text-fill: #a0a0a0; -fx-font-size: 16px; -fx-font-style: italic;");
+            itemCardsContainer.getChildren().add(emptyLabel);
+            return;
+        }
+
+        for (Item item : inventory) {
+            VBox card = new VBox(12);
+            card.setAlignment(Pos.CENTER);
+            card.setPrefSize(220, 260);
+            card.setStyle("-fx-background-color: #2c2c2e; -fx-border-color: #FFD700; -fx-border-width: 1.5px; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-padding: 15px;");
+
+            ImageView imgView = new ImageView();
+            InputStream is = getClass().getResourceAsStream("/images/" + item.getImageFileName());
+            if (is != null) {
+                imgView.setImage(new Image(is));
+            }
+            imgView.setFitWidth(50);
+            imgView.setFitHeight(50);
+            imgView.setPreserveRatio(true);
+
+            Label nameLabel = new Label(item.getName());
+            nameLabel.setStyle("-fx-text-fill: #FFD700; -fx-font-weight: bold; -fx-font-size: 16px;");
+
+            Label descLabel = new Label(item.getDescription());
+            descLabel.setStyle("-fx-text-fill: #d1d1d6; -fx-font-size: 12px; -fx-text-alignment: center;");
+            descLabel.setWrapText(true);
+            descLabel.setMaxWidth(190);
+
+            Button useBtn = new Button("Použít");
+            useBtn.setStyle("-fx-background-color: #2ed573; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 4px; -fx-padding: 6px 16px;");
+            useBtn.setOnAction(e -> {
+                player.getInventory().remove(item);
+                updateInventoryUI();
+                zavritVyberPredmetu();
+                if (statusLabel != null) {
+                    statusLabel.setText("Použil jsi předmět: " + item.getName());
+                }
+            });
+
+            card.getChildren().addAll(imgView, nameLabel, descLabel, useBtn);
+            itemCardsContainer.getChildren().add(card);
+        }
+    }
+
     private void updateTokenPosition() {
         if (playerToken == null || player == null) return;
 
+        double offset = TOKEN_SIZE / 2.0;
+
         if (player.isInHouse()) {
-            playerToken.setLayoutX(player.getHeroClass().getHomeX());
-            playerToken.setLayoutY(player.getHeroClass().getHomeY());
+            playerToken.setLayoutX(player.getHeroClass().getHomeX() - offset);
+            playerToken.setLayoutY(player.getHeroClass().getHomeY() - offset);
         } else {
             TilePosition tile = BoardPath.getTile(player.getCurrentTileIndex());
-            playerToken.setLayoutX(tile.getX());
-            playerToken.setLayoutY(tile.getY());
+            playerToken.setLayoutX(tile.getX() - offset);
+            playerToken.setLayoutY(tile.getY() - offset);
         }
     }
 }
