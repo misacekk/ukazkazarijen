@@ -1,149 +1,169 @@
 package cz.panacku.zlobse;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.StackPane;
-import javafx.stage.Stage;
+import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.util.Duration;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.Random;
 
 public class GameController {
 
-    @FXML private StackPane boardContainer;
+    @FXML private Pane boardPane;
+    @FXML private Button rollDiceButton;
+    @FXML private Button endTurnButton;
+    @FXML private Label diceResultLabel;
     @FXML private Label statusLabel;
-    @FXML private ImageView itemSlot1;
-    @FXML private ImageView itemSlot2;
-    @FXML private ImageView itemSlot3;
 
-    private GameEngine gameEngine;
+    private Circle playerToken;
+    private Player player;
+    private final Random random = new Random();
 
     @FXML
     public void initialize() {
-        List<Player> players = new ArrayList<>();
-        players.add(new Player("Hráč 1", "Rytíř", "RED"));
-        players.add(new Player("Hráč 2", "Kouzelník", "BLUE"));
-        players.add(new Player("Hráč 3", "Bandita", "GREEN"));
-        players.add(new Player("Hráč 4", "Nekromant", "YELLOW"));
+        // Výchozí hrdina při spuštění hry
+        selectHero(HeroClass.NEKROMANT);
+    }
 
-        gameEngine = new GameEngine(players);
-        updateUI();
+    // --- HANDLERY PRO TLAČÍTKA VOLBY HRDINŮ ---
+
+    @FXML
+    private void zvolitNekromanta() {
+        selectHero(HeroClass.NEKROMANT);
     }
 
     @FXML
-    private void hoditKostkou(ActionEvent event) {
-        if (gameEngine.hasRolled()) {
-            statusLabel.setText("⚠️ Už jsi házel! Hodil jsi " + gameEngine.getLastDiceRoll() + ".");
-            return;
-        }
-
-        int hod = gameEngine.rollDice();
-        Player current = gameEngine.getCurrentPlayer();
-        statusLabel.setText("🎲 " + current.getName() + " (" + current.getCharacterType() + ") hodil číslo " + hod + "!");
+    private void zvolitKouzelnika() {
+        selectHero(HeroClass.KOUZELNIK);
     }
 
     @FXML
-    private void pouzitSchopnost(ActionEvent event) {
-        Player current = gameEngine.getCurrentPlayer();
-
-        if (current.useAbility()) {
-            statusLabel.setText("⚡ " + current.getName() + " použil schopnost postavy " + current.getCharacterType() + "!");
-        } else {
-            statusLabel.setText("⚠️ " + current.getName() + " už nemá žádná další použití schopnosti!");
-        }
-
-        updateUI();
+    private void zvolitBandITU() {
+        selectHero(HeroClass.BANDITA);
     }
 
     @FXML
-    private void pouzitPredmet(ActionEvent event) {
-        Player current = gameEngine.getCurrentPlayer();
-        String[] inv = current.getInventory();
+    private void zvolitBandita() {
+        selectHero(HeroClass.BANDITA);
+    }
 
-        List<String> dostupnePredmety = new ArrayList<>();
-        for (int i = 0; i < inv.length; i++) {
-            if (inv[i] != null) {
-                dostupnePredmety.add((i + 1) + ". " + inv[i]);
+    @FXML
+    private void zvolitRytire() {
+        selectHero(HeroClass.RYTIR);
+    }
+
+    // --- HANDLER PRO HOD KOSTKOU (PODLE FXML) ---
+
+    @FXML
+    private void hoditKostkou() {
+        onRollDice();
+    }
+
+    @FXML
+    private void onRollDice() {
+        if (player.hasRolledThisTurn()) {
+            if (statusLabel != null) {
+                statusLabel.setText("V tomto tahu už jsi házel! Ukonči tah.");
             }
-        }
-
-        if (dostupnePredmety.isEmpty()) {
-            statusLabel.setText("⚠️ Nemáš v inventáři žádné předměty!");
             return;
         }
 
-        ChoiceDialog<String> dialog = new ChoiceDialog<>(dostupnePredmety.get(0), dostupnePredmety);
-        dialog.setTitle("Výběr předmětu");
-        dialog.setHeaderText("Použít předmět hráče " + current.getName());
-        dialog.setContentText("Vyber předmět k použití:");
+        player.setHasRolledThisTurn(true);
+        if (rollDiceButton != null) rollDiceButton.setDisable(true);
 
-        Optional<String> result = dialog.showAndWait();
-        result.ifPresent(vybrany -> {
-            int slotIndex = Character.getNumericValue(vybrany.charAt(0)) - 1;
-            String nazevPredmetu = inv[slotIndex];
+        int diceValue = random.nextInt(6) + 1;
+        if (diceResultLabel != null) diceResultLabel.setText("Padlo: " + diceValue);
 
-            current.removeItem(slotIndex);
-            updateUI();
-            statusLabel.setText("🧪 " + current.getName() + " použil předmět: " + nazevPredmetu + "!");
-        });
+        animateMovement(diceValue);
+    }
+
+    // --- OSTATNÍ HANDLERY ---
+
+    @FXML
+    private void zavritVyberPredmetu() {
+        if (statusLabel != null) {
+            statusLabel.setText("Výběr předmětů zavřen.");
+        }
     }
 
     @FXML
     private void zpetDoMenu(ActionEvent event) {
-        try {
-            java.net.URL fxmlLocation = getClass().getResource("/cz/panacku/zlobse/Menu.fxml");
-            if (fxmlLocation == null) fxmlLocation = getClass().getResource("/Menu.fxml");
-            if (fxmlLocation == null) fxmlLocation = getClass().getResource("Menu.fxml");
-
-            if (fxmlLocation == null) {
-                System.err.println("CHYBA: Soubor Menu.fxml nebyl nalezen!");
-                return;
-            }
-
-            Parent menuRoot = FXMLLoader.load(fxmlLocation);
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(menuRoot, 1600, 1000));
-            stage.setResizable(false);
-            stage.sizeToScene();
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        App.zmenScenu("/Menu.fxml");
     }
 
-    public void updateUI() {
-        Player current = gameEngine.getCurrentPlayer();
-        if (statusLabel != null) {
-            statusLabel.setText("Na tahu: " + current.getName() + " | Postava: " + current.getCharacterType() +
-                    " | Schopnost zbývá: " + current.getAbilityUsesLeft() + "x");
-        }
-
-        String[] inv = current.getInventory();
-        setSlotImage(itemSlot1, inv[0]);
-        setSlotImage(itemSlot2, inv[1]);
-        setSlotImage(itemSlot3, inv[2]);
+    @FXML
+    private void onEndTurn() {
+        resetTurnState();
     }
 
-    private void setSlotImage(ImageView slot, String itemName) {
-        if (slot == null) return;
-        if (itemName != null && !itemName.isEmpty()) {
-            try {
-                slot.setImage(new Image(getClass().getResourceAsStream("/images/" + itemName.toLowerCase() + ".png")));
-            } catch (Exception e) {
-                slot.setImage(null);
-            }
+    @FXML
+    private void ukoncitTah() {
+        resetTurnState();
+    }
+
+    // ------------------------------------------------
+
+    public void selectHero(HeroClass selectedHero) {
+        player = new Player(selectedHero);
+
+        if (playerToken == null) {
+            playerToken = new Circle(14);
+            playerToken.setFill(Color.RED);
+            playerToken.setStroke(Color.WHITE);
+            playerToken.setStrokeWidth(2.5);
+            boardPane.getChildren().add(playerToken);
+        }
+
+        updateTokenPosition();
+        resetTurnState();
+    }
+
+    private void animateMovement(int steps) {
+        Timeline timeline = new Timeline();
+
+        for (int i = 1; i <= steps; i++) {
+            final int stepNumber = i;
+            KeyFrame keyFrame = new KeyFrame(Duration.millis(250 * stepNumber), event -> {
+                if (player.isInHouse()) {
+                    player.stepToTile(player.getHeroClass().getStartIndex());
+                } else {
+                    player.stepToTile(player.getCurrentTileIndex() + 1);
+                }
+                updateTokenPosition();
+            });
+            timeline.getKeyFrames().add(keyFrame);
+        }
+
+        timeline.setOnFinished(event -> {
+            if (statusLabel != null) statusLabel.setText("Pohyb dokončen. Klikni na Ukončit tah.");
+            if (endTurnButton != null) endTurnButton.setDisable(false);
+        });
+
+        timeline.play();
+    }
+
+    private void resetTurnState() {
+        player.setHasRolledThisTurn(false);
+        if (rollDiceButton != null) rollDiceButton.setDisable(false);
+        if (endTurnButton != null) endTurnButton.setDisable(true);
+        if (diceResultLabel != null) diceResultLabel.setText("Padlo: -");
+        if (statusLabel != null) statusLabel.setText("Aktivní hrdina: " + player.getHeroClass().getName());
+    }
+
+    private void updateTokenPosition() {
+        if (player.isInHouse()) {
+            playerToken.setLayoutX(player.getHeroClass().getHomeX());
+            playerToken.setLayoutY(player.getHeroClass().getHomeY());
         } else {
-            slot.setImage(null);
+            TilePosition tile = BoardPath.getTile(player.getCurrentTileIndex());
+            playerToken.setLayoutX(tile.getX());
+            playerToken.setLayoutY(tile.getY());
         }
     }
 }
