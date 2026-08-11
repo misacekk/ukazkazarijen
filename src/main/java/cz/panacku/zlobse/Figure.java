@@ -9,5 +9,6 @@ public class Figure {
         this.ownerColor = ownerColor;
     }
 
-    // Sem doplníš vlastnosti figurky (pozice, stav zda je v domečku atd.)
+    public int getId() { return id; }
+    public String getOwnerColor() { return ownerColor; }
 }

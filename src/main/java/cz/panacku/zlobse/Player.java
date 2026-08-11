@@ -8,9 +8,9 @@ public class Player {
 
     public Player(HeroClass heroClass) {
         this.heroClass = heroClass;
-        this.inHouse = true;               // DŮLEŽITÉ: Začíná uvnitř domečku N
+        this.inHouse = true;
         this.currentTileIndex = -1;
-        this.hasRolledThisTurn = false;    // Ochrana proti více hodům v jednom tahu
+        this.hasRolledThisTurn = false;
     }
 
     public HeroClass getHeroClass() {

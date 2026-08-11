@@ -31,8 +31,19 @@
         <StackPane BorderPane.alignment="CENTER">
             <children>
 
-                <!-- 1. VÝBĚR POSTAVY -->
-                <VBox fx:id="selectionContainer" alignment="CENTER" spacing="30.0">
+                <!-- 1. HERNÍ DESKA (Spodní vrstva) -->
+                <VBox fx:id="gameContent" alignment="CENTER">
+                    <children>
+                        <StackPane fx:id="boardContainer" prefHeight="700.0" prefWidth="1200.0" maxWidth="1200.0" maxHeight="700.0"
+                                   style="-fx-background-color: #1c1c1e; -fx-background-radius: 8px;">
+                        </StackPane>
+                    </children>
+                    <padding><Insets top="10.0" bottom="10.0" /></padding>
+                </VBox>
+
+                <!-- 2. VÝBĚR POSTAVY (Vrstva NAD deskou) -->
+                <VBox fx:id="selectionContainer" alignment="CENTER" spacing="30.0"
+                      style="-fx-background-color: rgba(18, 18, 20, 0.88);">
                     <children>
                         <Label text="VYBER SI SVOU POSTAVU" style="-fx-text-fill: #FFD700; -fx-font-size: 32px; -fx-font-weight: bold;" />
                         <HBox alignment="CENTER" spacing="20.0">
@@ -50,17 +61,7 @@
                     </children>
                 </VBox>
 
-                <!-- 2. HERNÍ DESKA -->
-                <VBox fx:id="gameContent" alignment="CENTER" visible="false">
-                    <children>
-                        <StackPane fx:id="boardContainer" prefHeight="700.0" prefWidth="1200.0" maxWidth="1200.0" maxHeight="700.0"
-                                   style="-fx-background-color: #1c1c1e; -fx-background-radius: 8px;">
-                        </StackPane>
-                    </children>
-                    <padding><Insets top="10.0" bottom="10.0" /></padding>
-                </VBox>
-
-                <!-- 3. OVERLAY PRO VÝBĚR PŘEDMĚTU K POUŽITÍ -->
+                <!-- 3. OVERLAY PRO VÝBĚR PŘEDMĚTU -->
                 <VBox fx:id="itemSelectionOverlay" alignment="CENTER" spacing="25.0" visible="false"
                       style="-fx-background-color: rgba(18, 18, 20, 0.95);">
                     <children>
@@ -75,7 +76,7 @@
         </StackPane>
     </center>
 
-    <!-- DOLNÍ LIŠTA -->
+    <!-- DOLNÍ LIŠTA (TLAČÍTKA A INVENTÁŘ) -->
     <bottom>
         <VBox fx:id="bottomBar" visible="false" style="-fx-background-color: #1c1c1e; -fx-border-color: #2c2c2e; -fx-border-width: 1 0 0 0;" BorderPane.alignment="CENTER">
             <children>

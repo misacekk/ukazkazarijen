@@ -8,10 +8,10 @@ public class BoardPath {
 
     static {
         // Horní řada (zleva doprava)
-        PATH.add(new TilePosition(205, 154)); // Index 0 (Start pro Nekromanta pod N)
+        PATH.add(new TilePosition(205, 154)); // Index 0 (Start pro Nekromanta)
         PATH.add(new TilePosition(315, 154)); // Index 1
         PATH.add(new TilePosition(427, 155)); // Index 2
-        PATH.add(new TilePosition(538, 155)); // Index 3 (Truhla 1)
+        PATH.add(new TilePosition(538, 155)); // Index 3
         PATH.add(new TilePosition(650, 155)); // Index 4
         PATH.add(new TilePosition(761, 154)); // Index 5 (Start pro Kouzelníka)
         PATH.add(new TilePosition(871, 154)); // Index 6
@@ -26,7 +26,7 @@ public class BoardPath {
         PATH.add(new TilePosition(983, 535)); // Index 11
         PATH.add(new TilePosition(874, 536)); // Index 12
         PATH.add(new TilePosition(761, 535)); // Index 13
-        PATH.add(new TilePosition(649, 535)); // Index 14 (Truhla 2)
+        PATH.add(new TilePosition(649, 535)); // Index 14
         PATH.add(new TilePosition(541, 535)); // Index 15 (Start pro Rytíře)
         PATH.add(new TilePosition(427, 535)); // Index 16
         PATH.add(new TilePosition(315, 535)); // Index 17
