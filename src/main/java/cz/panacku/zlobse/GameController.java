@@ -32,11 +32,11 @@ public class GameController {
     @FXML private ImageView itemSlot3;
 
     private Pane tokenLayer;
-    private ImageView playerToken; // Změněno z Circle na ImageView
+    private ImageView playerToken;
     private Player player;
     private final Random random = new Random();
 
-    private static final double TOKEN_SIZE = 40.0; // Velikost figurky hrdiny na desce
+    private static final double TOKEN_SIZE = 40.0;
 
     @FXML
     public void initialize() {
@@ -71,11 +71,28 @@ public class GameController {
         player.setHasRolledThisTurn(true);
         int diceValue = random.nextInt(6) + 1;
 
-        if (statusLabel != null) {
-            statusLabel.setText("Hráč " + player.getHeroClass().getName() + " hodil: " + diceValue);
-        }
+        if (player.isInHouse()) {
+            if (diceValue == 6) {
+                // Při hození 6 vyskočí z domečku na své startovní políčko
+                player.stepToTile(player.getHeroClass().getStartIndex());
+                updateTokenPosition();
+                player.setHasRolledThisTurn(false);
 
-        animateMovement(diceValue);
+                if (statusLabel != null) {
+                    statusLabel.setText("Hodil jsi 6! Hráč " + player.getHeroClass().getName() + " vyjel z domečku na startovní políčko.");
+                }
+            } else {
+                player.setHasRolledThisTurn(false);
+                if (statusLabel != null) {
+                    statusLabel.setText("Hodil jsi " + diceValue + ". Pro nasazení z domečku musíš hodit 6!");
+                }
+            }
+        } else {
+            if (statusLabel != null) {
+                statusLabel.setText("Hráč " + player.getHeroClass().getName() + " hodil: " + diceValue);
+            }
+            animateMovement(diceValue);
+        }
     }
 
     @FXML
@@ -113,7 +130,6 @@ public class GameController {
         if (selectionContainer != null) selectionContainer.setVisible(false);
         if (bottomBar != null) bottomBar.setVisible(true);
 
-        // Načtení obrázku zvoleného hrdiny
         InputStream is = getClass().getResourceAsStream("/images/" + selectedHero.getImageFileName());
         if (is != null && playerToken != null) {
             playerToken.setImage(new Image(is));
@@ -123,7 +139,7 @@ public class GameController {
         updateInventoryUI();
 
         if (statusLabel != null) {
-            statusLabel.setText("Na tahu: " + player.getHeroClass().getName());
+            statusLabel.setText("Na tahu: " + player.getHeroClass().getName() + " (Musíš hodit 6 pro vyjetí z domečku)");
         }
     }
 
@@ -146,7 +162,6 @@ public class GameController {
         tokenLayer.setPrefSize(1200, 700);
         tokenLayer.setMaxSize(1200, 700);
 
-        // Vytvoření ImageView pro figurku
         playerToken = new ImageView();
         playerToken.setFitWidth(TOKEN_SIZE);
         playerToken.setFitHeight(TOKEN_SIZE);
@@ -162,11 +177,7 @@ public class GameController {
         for (int i = 1; i <= steps; i++) {
             final int stepNumber = i;
             KeyFrame keyFrame = new KeyFrame(Duration.millis(250 * stepNumber), event -> {
-                if (player.isInHouse()) {
-                    player.stepToTile(player.getHeroClass().getStartIndex());
-                } else {
-                    player.stepToTile(player.getCurrentTileIndex() + 1);
-                }
+                player.stepToTile(player.getCurrentTileIndex() + 1);
                 updateTokenPosition();
             });
             timeline.getKeyFrames().add(keyFrame);

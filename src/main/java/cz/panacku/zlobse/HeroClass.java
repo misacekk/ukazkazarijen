@@ -1,9 +1,9 @@
 package cz.panacku.zlobse;
 
 public enum HeroClass {
-    RYTIR("Rytíř", 15, 60, 535, "rytir.png"),
-    KOUZELNIK("Kouzelník", 5, 1140, 60, "mag.png"),
-    BANDITA("Bandita", 10, 1140, 535, "bandita.png"),
+    RYTIR("Rytíř", 18, 60, 640, "rytir.png"),
+    KOUZELNIK("Kouzelník", 7, 1140, 60, "mag.png"),
+    BANDITA("Bandita", 11, 1140, 640, "bandita.png"),
     NEKROMANT("Nekromant", 0, 60, 60, "nekromant.png");
 
     private final String name;

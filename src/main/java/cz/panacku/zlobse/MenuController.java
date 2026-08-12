@@ -19,4 +19,9 @@ public class MenuController {
     private void ukoncitAplikaci(ActionEvent event) {
         System.exit(0);
     }
+
+    @FXML
+    private void otvritPravidla() {
+        App.zmenScenu("/Rules.fxml");
+    }
 }
