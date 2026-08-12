@@ -5,58 +5,38 @@ import java.util.List;
 
 public class Player {
     private final HeroClass heroClass;
-    private boolean inHouse;
-    private int currentTileIndex;
-    private boolean hasRolledThisTurn;
+    private int currentTileIndex = 0;
+    private boolean inHouse = true; // Zde je nastaveno, že hráč začíná v domečku
+    private boolean hasRolledThisTurn = false;
     private final List<Item> inventory = new ArrayList<>();
 
     public Player(HeroClass heroClass) {
         this.heroClass = heroClass;
-        this.inHouse = true;
-        this.currentTileIndex = -1;
-        this.hasRolledThisTurn = false;
     }
 
-    public HeroClass getHeroClass() {
-        return heroClass;
+    public HeroClass getHeroClass() { return heroClass; }
+
+    public int getCurrentTileIndex() { return currentTileIndex; }
+
+    public void stepToTile(int index) {
+        this.currentTileIndex = index % BoardPath.getPathLength();
     }
 
-    public boolean isInHouse() {
-        return inHouse;
+    public boolean isInHouse() { return inHouse; }
+
+    public void setInHouse(boolean inHouse) { this.inHouse = inHouse; }
+
+    public boolean hasRolledThisTurn() { return hasRolledThisTurn; }
+
+    public void setHasRolledThisTurn(boolean hasRolledThisTurn) {
+        this.hasRolledThisTurn = hasRolledThisTurn;
     }
 
-    public int getCurrentTileIndex() {
-        return currentTileIndex;
-    }
+    public List<Item> getInventory() { return inventory; }
 
-    public boolean hasRolledThisTurn() {
-        return hasRolledThisTurn;
-    }
-
-    public void setHasRolledThisTurn(boolean status) {
-        this.hasRolledThisTurn = status;
-    }
-
-    public List<Item> getInventory() {
-        return inventory;
-    }
-
-    public boolean addItem(Item item) {
+    public void addItem(Item item) {
         if (inventory.size() < 3) {
             inventory.add(item);
-            return true;
         }
-        return false;
-    }
-
-    public void stepToTile(int newIndex) {
-        this.inHouse = false;
-        this.currentTileIndex = newIndex % BoardPath.getPathLength();
-    }
-
-    public void resetToHouse() {
-        this.inHouse = true;
-        this.currentTileIndex = -1;
-        this.hasRolledThisTurn = false;
     }
 }

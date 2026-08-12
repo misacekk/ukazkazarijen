@@ -33,10 +33,14 @@ public class GameController {
 
     private Pane tokenLayer;
     private ImageView playerToken;
+    private ImageView diceImageView; // Obrazovka kostky uprostřed desky
     private Player player;
     private final Random random = new Random();
 
-    private static final double TOKEN_SIZE = 40.0;
+    private static final double BOARD_WIDTH = 1400.0;
+    private static final double BOARD_HEIGHT = 800.0;
+    private static final double TOKEN_SIZE = 50.0;
+    private static final double DICE_SIZE = 100.0; // Velikost kostky uprostřed
 
     @FXML
     public void initialize() {
@@ -48,50 +52,74 @@ public class GameController {
         if (itemSelectionOverlay != null) itemSelectionOverlay.setVisible(false);
     }
 
-    // --- HANDLERY PRO VOLBU HRDINŮ ---
-
     @FXML private void zvolitRytire() { selectHero(HeroClass.RYTIR); }
     @FXML private void zvolitKouzelnika() { selectHero(HeroClass.KOUZELNIK); }
     @FXML private void zvolitBanditu() { selectHero(HeroClass.BANDITA); }
     @FXML private void zvolitNekromanta() { selectHero(HeroClass.NEKROMANT); }
-
-    // --- HANDLERY PRO HRU A OVLÁDÁNÍ ---
 
     @FXML
     private void hoditKostkou() {
         if (player == null) return;
 
         if (player.hasRolledThisTurn()) {
-            if (statusLabel != null) {
-                statusLabel.setText("V tomto tahu už jsi házel!");
-            }
+            if (statusLabel != null) statusLabel.setText("V tomto tahu už jsi házel!");
             return;
         }
 
+        // Zablokujeme opakovaný hod během animace
         player.setHasRolledThisTurn(true);
-        int diceValue = random.nextInt(6) + 1;
 
-        if (player.isInHouse()) {
-            if (diceValue == 6) {
-                // Při hození 6 vyskočí z domečku na své startovní políčko
-                player.stepToTile(player.getHeroClass().getStartIndex());
-                updateTokenPosition();
-                player.setHasRolledThisTurn(false);
+        // Timeline pro animaci problikávání kostky (10x nahodilý snímek)
+        Timeline diceAnimation = new Timeline();
+        int totalFlashes = 10;
+        int intervalMs = 80; // Rychlost střídání obrázků
 
-                if (statusLabel != null) {
-                    statusLabel.setText("Hodil jsi 6! Hráč " + player.getHeroClass().getName() + " vyjel z domečku na startovní políčko.");
+        for (int i = 0; i < totalFlashes; i++) {
+            KeyFrame kf = new KeyFrame(Duration.millis(intervalMs * (i + 1)), event -> {
+                int randomDice = random.nextInt(6) + 1;
+                setDiceImage(randomDice);
+            });
+            diceAnimation.getKeyFrames().add(kf);
+        }
+
+        // Po dokončení animace se vyhodnotí finální hod a vyhoná pohyb
+        diceAnimation.setOnFinished(event -> {
+            int finalDiceValue = random.nextInt(6) + 1;
+            setDiceImage(finalDiceValue); // Zobrazíme finální hozené číslo
+
+            // LOGIKA DOMEČKU VS LOGIKA HERNÍ DESKY
+            if (player.isInHouse()) {
+                if (finalDiceValue == 6) {
+                    player.setInHouse(false);
+                    player.stepToTile(player.getHeroClass().getStartIndex());
+                    updateTokenPosition();
+                    player.setHasRolledThisTurn(false); // Za hod 6 může házet znovu
+
+                    if (statusLabel != null) {
+                        statusLabel.setText("Hodil jsi 6! Hráč " + player.getHeroClass().getName() + " vyjel z domečku na políčko u domečku. Házíš znovu!");
+                    }
+                } else {
+                    player.setHasRolledThisTurn(false); // Pokud nehodil 6, tah končí (nebo na dalšího hráče)
+                    if (statusLabel != null) {
+                        statusLabel.setText("Hodil jsi " + finalDiceValue + ". Pro vyjetí z domečku musíš hodit 6!");
+                    }
                 }
             } else {
-                player.setHasRolledThisTurn(false);
                 if (statusLabel != null) {
-                    statusLabel.setText("Hodil jsi " + diceValue + ". Pro nasazení z domečku musíš hodit 6!");
+                    statusLabel.setText("Hráč " + player.getHeroClass().getName() + " hodil: " + finalDiceValue);
                 }
+                animateMovement(finalDiceValue);
             }
-        } else {
-            if (statusLabel != null) {
-                statusLabel.setText("Hráč " + player.getHeroClass().getName() + " hodil: " + diceValue);
-            }
-            animateMovement(diceValue);
+        });
+
+        diceAnimation.play();
+    }
+
+    private void setDiceImage(int diceValue) {
+        if (diceImageView == null) return;
+        InputStream is = getClass().getResourceAsStream("/images/kostka" + diceValue + ".png");
+        if (is != null) {
+            diceImageView.setImage(new Image(is));
         }
     }
 
@@ -105,9 +133,7 @@ public class GameController {
 
     @FXML
     private void zavritVyberPredmetu() {
-        if (itemSelectionOverlay != null) {
-            itemSelectionOverlay.setVisible(false);
-        }
+        if (itemSelectionOverlay != null) itemSelectionOverlay.setVisible(false);
     }
 
     @FXML
@@ -122,8 +148,6 @@ public class GameController {
         App.zmenScenu("/Menu.fxml");
     }
 
-    // --- LOGIKA A UI HERNÍ DESKY ---
-
     private void selectHero(HeroClass selectedHero) {
         player = new Player(selectedHero);
 
@@ -135,11 +159,15 @@ public class GameController {
             playerToken.setImage(new Image(is));
         }
 
+        player.setInHouse(true);
         updateTokenPosition();
         updateInventoryUI();
 
+        // Nastavíme úvodní kostku na č. 1
+        setDiceImage(1);
+
         if (statusLabel != null) {
-            statusLabel.setText("Na tahu: " + player.getHeroClass().getName() + " (Musíš hodit 6 pro vyjetí z domečku)");
+            statusLabel.setText("Na tahu: " + player.getHeroClass().getName() + " (Musíš hodit 6 pro vyjetí)");
         }
     }
 
@@ -154,20 +182,27 @@ public class GameController {
             boardImage.setImage(new Image(is));
         }
 
-        boardImage.setFitWidth(1200);
-        boardImage.setFitHeight(700);
-        boardImage.setPreserveRatio(true);
+        boardImage.setFitWidth(BOARD_WIDTH);
+        boardImage.setFitHeight(BOARD_HEIGHT);
+        boardImage.setPreserveRatio(false);
 
         tokenLayer = new Pane();
-        tokenLayer.setPrefSize(1200, 700);
-        tokenLayer.setMaxSize(1200, 700);
+        tokenLayer.setPrefSize(BOARD_WIDTH, BOARD_HEIGHT);
+        tokenLayer.setMaxSize(BOARD_WIDTH, BOARD_HEIGHT);
+
+        // Prvek pro kostku umístěný do přesného středu desky
+        diceImageView = new ImageView();
+        diceImageView.setFitWidth(DICE_SIZE);
+        diceImageView.setFitHeight(DICE_SIZE);
+        diceImageView.setLayoutX((BOARD_WIDTH - DICE_SIZE) / 2.0);
+        diceImageView.setLayoutY((BOARD_HEIGHT - DICE_SIZE) / 2.0);
 
         playerToken = new ImageView();
         playerToken.setFitWidth(TOKEN_SIZE);
         playerToken.setFitHeight(TOKEN_SIZE);
         playerToken.setPreserveRatio(true);
 
-        tokenLayer.getChildren().add(playerToken);
+        tokenLayer.getChildren().addAll(diceImageView, playerToken);
         boardContainer.getChildren().addAll(boardImage, tokenLayer);
     }
 
@@ -186,17 +221,16 @@ public class GameController {
         timeline.setOnFinished(event -> {
             player.setHasRolledThisTurn(false);
 
-            // Kontrola dopadu na truhlu (index 4 nebo index 15)
             if (!player.isInHouse() && BoardPath.isItemTile(player.getCurrentTileIndex())) {
                 if (player.getInventory().size() < 3) {
                     Item newItem = Item.getRandomItem();
                     player.addItem(newItem);
                     updateInventoryUI();
                     if (statusLabel != null) {
-                        statusLabel.setText("Našel jsi truhlu! Získal jsi: " + newItem.getName());
+                        statusLabel.setText("Stoupl jsi na truhlu! Získal jsi: " + newItem.getName());
                     }
                 } else if (statusLabel != null) {
-                    statusLabel.setText("Našel jsi truhlu, ale inventář máš plný!");
+                    statusLabel.setText("Stoupl jsi na truhlu, ale inventář máš plný!");
                 }
             }
         });
@@ -248,9 +282,7 @@ public class GameController {
 
             ImageView imgView = new ImageView();
             InputStream is = getClass().getResourceAsStream("/images/" + item.getImageFileName());
-            if (is != null) {
-                imgView.setImage(new Image(is));
-            }
+            if (is != null) imgView.setImage(new Image(is));
             imgView.setFitWidth(50);
             imgView.setFitHeight(50);
             imgView.setPreserveRatio(true);

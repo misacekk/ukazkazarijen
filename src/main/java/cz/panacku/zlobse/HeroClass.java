@@ -1,10 +1,10 @@
 package cz.panacku.zlobse;
 
 public enum HeroClass {
-    RYTIR("Rytíř", 18, 60, 640, "rytir.png"),
-    KOUZELNIK("Kouzelník", 7, 1140, 60, "mag.png"),
-    BANDITA("Bandita", 11, 1140, 640, "bandita.png"),
-    NEKROMANT("Nekromant", 0, 60, 60, "nekromant.png");
+    NEKROMANT("Nekromant", 33, 127.0, 87.0, "nekromant.png"),
+    KOUZELNIK("Kouzelník", 8, 1273.0, 82.0, "mag.png"),
+    BANDITA("Bandita", 16, 1267.0, 743.0, "bandita.png"),
+    RYTIR("Rytíř", 25, 137.0, 758.0, "rytir.png");
 
     private final String name;
     private final int startIndex;
