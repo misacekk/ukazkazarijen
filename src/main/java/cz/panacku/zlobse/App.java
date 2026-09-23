@@ -18,7 +18,6 @@ public class App extends Application {
         primaryStage.setResizable(false);
         primaryStage.setTitle("Panečku, zlob se!");
 
-        // Načte hlavní MENU, ne rovnou hru
         zmenScenu("/Menu.fxml");
         primaryStage.show();
     }

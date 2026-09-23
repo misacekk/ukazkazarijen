@@ -15,12 +15,18 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class GameController {
 
     @FXML private VBox selectionContainer;
+    @FXML private VBox modeSelectionBox;
+    @FXML private VBox heroSelectionBox;
+    @FXML private Label selectionTitleLabel;
+    @FXML private Button btnRytir, btnKouzelnik, btnBandita, btnNekromant;
+
     @FXML private VBox gameContent;
     @FXML private StackPane boardContainer;
     @FXML private VBox itemSelectionOverlay;
@@ -32,95 +38,264 @@ public class GameController {
     @FXML private ImageView itemSlot3;
 
     private Pane tokenLayer;
-    private ImageView playerToken;
-    private ImageView diceImageView; // Obrazovka kostky uprostřed desky
-    private Player player;
+    private ImageView diceImageView;
+
+    private int targetPlayerCount = 2;
+    private final List<Player> players = new ArrayList<>();
+    private final List<ImageView> playerTokens = new ArrayList<>();
+    private int currentPlayerIndex = 0;
+
     private final Random random = new Random();
 
     private static final double BOARD_WIDTH = 1400.0;
     private static final double BOARD_HEIGHT = 800.0;
     private static final double TOKEN_SIZE = 50.0;
-    private static final double DICE_SIZE = 100.0; // Velikost kostky uprostřed
+    private static final double DICE_SIZE = 100.0;
 
     @FXML
     public void initialize() {
         if (gameContent != null) gameContent.setVisible(true);
-        setupBoardUI();
-
         if (selectionContainer != null) selectionContainer.setVisible(true);
+        if (modeSelectionBox != null) modeSelectionBox.setVisible(true);
+        if (heroSelectionBox != null) heroSelectionBox.setVisible(false);
         if (bottomBar != null) bottomBar.setVisible(false);
         if (itemSelectionOverlay != null) itemSelectionOverlay.setVisible(false);
+
+        setupBoardUI();
     }
 
-    @FXML private void zvolitRytire() { selectHero(HeroClass.RYTIR); }
-    @FXML private void zvolitKouzelnika() { selectHero(HeroClass.KOUZELNIK); }
-    @FXML private void zvolitBanditu() { selectHero(HeroClass.BANDITA); }
-    @FXML private void zvolitNekromanta() { selectHero(HeroClass.NEKROMANT); }
+    @FXML private void zvolitRezim2() { startHeroSelection(2); }
+    @FXML private void zvolitRezim4() { startHeroSelection(4); }
+
+    private void startHeroSelection(int count) {
+        this.targetPlayerCount = count;
+        if (modeSelectionBox != null) modeSelectionBox.setVisible(false);
+        if (heroSelectionBox != null) heroSelectionBox.setVisible(true);
+        updateHeroSelectionUI();
+    }
+
+    @FXML private void zvolitRytire() { addPlayerHero(HeroClass.RYTIR); }
+    @FXML private void zvolitKouzelnika() { addPlayerHero(HeroClass.KOUZELNIK); }
+    @FXML private void zvolitBanditu() { addPlayerHero(HeroClass.BANDITA); }
+    @FXML private void zvolitNekromanta() { addPlayerHero(HeroClass.NEKROMANT); }
+
+    private void addPlayerHero(HeroClass heroClass) {
+        int newPlayerId = players.size() + 1;
+        Player p = new Player(newPlayerId, heroClass);
+        players.add(p);
+
+        ImageView tokenView = new ImageView();
+        tokenView.setFitWidth(TOKEN_SIZE);
+        tokenView.setFitHeight(TOKEN_SIZE);
+        tokenView.setPreserveRatio(true);
+
+        InputStream is = getClass().getResourceAsStream("/images/" + heroClass.getImageFileName());
+        if (is != null) tokenView.setImage(new Image(is));
+
+        playerTokens.add(tokenView);
+        if (tokenLayer != null) tokenLayer.getChildren().add(tokenView);
+
+        updateSingleTokenPosition(p, tokenView);
+
+        if (players.size() < targetPlayerCount) {
+            updateHeroSelectionUI();
+        } else {
+            if (selectionContainer != null) selectionContainer.setVisible(false);
+            if (bottomBar != null) bottomBar.setVisible(true);
+            currentPlayerIndex = 0;
+            startTurn();
+        }
+    }
+
+    private void updateHeroSelectionUI() {
+        int nextPlayerNum = players.size() + 1;
+        if (selectionTitleLabel != null) {
+            selectionTitleLabel.setText("Hráč " + nextPlayerNum + ": Vyber si svého hrdinu");
+        }
+
+        disableIfTaken(btnRytir, HeroClass.RYTIR);
+        disableIfTaken(btnKouzelnik, HeroClass.KOUZELNIK);
+        disableIfTaken(btnBandita, HeroClass.BANDITA);
+        disableIfTaken(btnNekromant, HeroClass.NEKROMANT);
+    }
+
+    private void disableIfTaken(Button btn, HeroClass heroClass) {
+        if (btn == null) return;
+        boolean taken = players.stream().anyMatch(p -> p.getHeroClass() == heroClass);
+        btn.setDisable(taken);
+    }
+
+    private Player getCurrentPlayer() { return players.get(currentPlayerIndex); }
+    private ImageView getCurrentToken() { return playerTokens.get(currentPlayerIndex); }
+
+    private void startTurn() {
+        Player p = getCurrentPlayer();
+        p.resetTurn();
+        updateInventoryUI();
+        if (statusLabel != null) {
+            statusLabel.setText("Na tahu je Hráč " + p.getId() + " (" + p.getHeroClass().getName() + ")");
+        }
+    }
+
+    private void nextTurn() {
+        int attempts = 0;
+        do {
+            currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+            attempts++;
+            Player p = getCurrentPlayer();
+
+            if (p.isSkipped()) {
+                p.setSkipped(false);
+                if (statusLabel != null) {
+                    statusLabel.setText("Hráč " + p.getId() + " vynechává kolo kvůli Krádeži tahu!");
+                }
+            } else if (!p.isFinished()) {
+                break;
+            }
+        } while (attempts < players.size() * 2);
+
+        if (getCurrentPlayer().isFinished()) {
+            if (statusLabel != null) statusLabel.setText("Hra skončila! Všichni hráči dokončili hru.");
+            return;
+        }
+
+        startTurn();
+    }
 
     @FXML
     private void hoditKostkou() {
-        if (player == null) return;
-
-        if (player.hasRolledThisTurn()) {
+        Player p = getCurrentPlayer();
+        if (p.hasRolledThisTurn()) {
             if (statusLabel != null) statusLabel.setText("V tomto tahu už jsi házel!");
             return;
         }
 
-        // Zablokujeme opakovaný hod během animace
-        player.setHasRolledThisTurn(true);
+        p.setHasRolledThisTurn(true);
 
-        // Timeline pro animaci problikávání kostky (10x nahodilý snímek)
         Timeline diceAnimation = new Timeline();
-        int totalFlashes = 10;
-        int intervalMs = 80; // Rychlost střídání obrázků
-
-        for (int i = 0; i < totalFlashes; i++) {
-            KeyFrame kf = new KeyFrame(Duration.millis(intervalMs * (i + 1)), event -> {
-                int randomDice = random.nextInt(6) + 1;
-                setDiceImage(randomDice);
-            });
+        for (int i = 0; i < 10; i++) {
+            KeyFrame kf = new KeyFrame(Duration.millis(80 * (i + 1)), event -> setDiceImage(random.nextInt(6) + 1));
             diceAnimation.getKeyFrames().add(kf);
         }
 
-        // Po dokončení animace se vyhodnotí finální hod a vyhoná pohyb
         diceAnimation.setOnFinished(event -> {
             int finalDiceValue = random.nextInt(6) + 1;
-            setDiceImage(finalDiceValue); // Zobrazíme finální hozené číslo
+            setDiceImage(finalDiceValue);
 
-            // LOGIKA DOMEČKU VS LOGIKA HERNÍ DESKY
-            if (player.isInHouse()) {
+            if (p.isInHouse()) {
                 if (finalDiceValue == 6) {
-                    player.setInHouse(false);
-                    player.stepToTile(player.getHeroClass().getStartIndex());
-                    updateTokenPosition();
-                    player.setHasRolledThisTurn(false); // Za hod 6 může házet znovu
-
-                    if (statusLabel != null) {
-                        statusLabel.setText("Hodil jsi 6! Hráč " + player.getHeroClass().getName() + " vyjel z domečku na políčko u domečku. Házíš znovu!");
-                    }
+                    p.setInHouse(false);
+                    updateSingleTokenPosition(p, getCurrentToken());
+                    p.setHasRolledThisTurn(false);
+                    checkKickout(p);
+                    if (statusLabel != null) statusLabel.setText("Hráč " + p.getId() + " hodil 6 a vyjel na hrací plochu! Hází znovu.");
                 } else {
-                    player.setHasRolledThisTurn(false); // Pokud nehodil 6, tah končí (nebo na dalšího hráče)
-                    if (statusLabel != null) {
-                        statusLabel.setText("Hodil jsi " + finalDiceValue + ". Pro vyjetí z domečku musíš hodit 6!");
-                    }
+                    if (statusLabel != null) statusLabel.setText("Hráč " + p.getId() + " hodil " + finalDiceValue + ". Pro vyjetí z domečku potřebuješ 6.");
+                    nextTurn();
                 }
             } else {
-                if (statusLabel != null) {
-                    statusLabel.setText("Hráč " + player.getHeroClass().getName() + " hodil: " + finalDiceValue);
+                int steps = finalDiceValue;
+                if (p.isDoubleRollActive()) {
+                    steps *= 2;
+                    p.setDoubleRollActive(false);
+                    if (statusLabel != null) statusLabel.setText("Dvojitý hod aktivován! Posun o " + steps + " políček.");
                 }
-                animateMovement(finalDiceValue);
+
+                animateMovement(p, getCurrentToken(), steps, () -> {
+                    checkKickout(p);
+                    if (finalDiceValue == 6) {
+                        p.setHasRolledThisTurn(false);
+                        if (statusLabel != null) statusLabel.setText("Hodil jsi 6! Házíš znovu.");
+                    } else {
+                        nextTurn();
+                    }
+                });
             }
         });
 
         diceAnimation.play();
     }
 
-    private void setDiceImage(int diceValue) {
-        if (diceImageView == null) return;
-        InputStream is = getClass().getResourceAsStream("/images/kostka" + diceValue + ".png");
-        if (is != null) {
-            diceImageView.setImage(new Image(is));
+    private void checkKickout(Player attacker) {
+        if (attacker.isInHouse() || attacker.isFinished()) return;
+
+        for (Player defender : players) {
+            if (defender != attacker && !defender.isInHouse() && !defender.isFinished()) {
+                if (defender.getCurrentTileIndex() == attacker.getCurrentTileIndex()) {
+                    defender.setInHouse(true);
+                    int defenderIndex = players.indexOf(defender);
+                    updateSingleTokenPosition(defender, playerTokens.get(defenderIndex));
+
+                    if (statusLabel != null) {
+                        statusLabel.setText("💥 Hráč " + attacker.getId() + " (" + attacker.getHeroClass().getName()
+                                + ") vyhodil Hráče " + defender.getId() + " (" + defender.getHeroClass().getName() + ") zpět na spawn!");
+                    }
+                }
+            }
         }
+    }
+
+    @FXML
+    private void pouzitSchopnost() {
+        Player p = getCurrentPlayer();
+
+        if (p.hasUsedAbility()) {
+            if (statusLabel != null) statusLabel.setText("Svou speciální schopnost jsi již v této hře použil!");
+            return;
+        }
+
+        switch (p.getHeroClass()) {
+            case RYTIR:
+                if (statusLabel != null) statusLabel.setText("Rytíř má pasivní schopnost.");
+                break;
+
+            case KOUZELNIK:
+                p.setDoubleRollActive(true);
+                p.setAbilityUsed(true); // Označeno jako použité
+                if (statusLabel != null) statusLabel.setText("Kouzelník seslal Dvojitý hod! Tvůj následující hod bude zdvojnásoben. (Schopnost vyčerpána)");
+                break;
+
+            case BANDITA:
+                int nextIdx = (currentPlayerIndex + 1) % players.size();
+                Player victim = players.get(nextIdx);
+                victim.setSkipped(true);
+                p.setHasRolledThisTurn(false);
+                p.setAbilityUsed(true); // Označeno jako použité
+                if (statusLabel != null) statusLabel.setText("Bandita ukradl tah Hráči " + victim.getId() + "! Házíš znovu a soupeř bude stát. (Schopnost vyčerpána)");
+                break;
+
+            case NEKROMANT:
+                if (statusLabel != null) statusLabel.setText("Nekromant má pasivní schopnost.");
+                break;
+        }
+    }
+
+    private void animateMovement(Player player, ImageView token, int steps, Runnable onComplete) {
+        Timeline timeline = new Timeline();
+
+        for (int i = 1; i <= steps; i++) {
+            final int stepNum = i;
+            KeyFrame kf = new KeyFrame(Duration.millis(220 * stepNum), event -> {
+                player.stepToTile(player.getCurrentTileIndex() + 1);
+                player.addSteps(1);
+                updateSingleTokenPosition(player, token);
+            });
+            timeline.getKeyFrames().add(kf);
+        }
+
+        timeline.setOnFinished(event -> {
+            if (BoardPath.isItemTile(player.getCurrentTileIndex())) {
+                if (player.getInventory().size() < 3) {
+                    Item item = Item.getRandomItem();
+                    player.addItem(item);
+                    updateInventoryUI();
+                    if (statusLabel != null) statusLabel.setText("Stoupl jsi na truhlu a získal: " + item.getName());
+                }
+            }
+            if (onComplete != null) onComplete.run();
+        });
+
+        timeline.play();
     }
 
     @FXML
@@ -131,179 +306,47 @@ public class GameController {
         }
     }
 
-    @FXML
-    private void zavritVyberPredmetu() {
-        if (itemSelectionOverlay != null) itemSelectionOverlay.setVisible(false);
-    }
-
-    @FXML
-    private void pouzitSchopnost() {
-        if (statusLabel != null && player != null) {
-            statusLabel.setText("Použita schopnost hrdiny: " + player.getHeroClass().getName());
-        }
-    }
-
-    @FXML
-    private void zpetDoMenu() {
-        App.zmenScenu("/Menu.fxml");
-    }
-
-    private void selectHero(HeroClass selectedHero) {
-        player = new Player(selectedHero);
-
-        if (selectionContainer != null) selectionContainer.setVisible(false);
-        if (bottomBar != null) bottomBar.setVisible(true);
-
-        InputStream is = getClass().getResourceAsStream("/images/" + selectedHero.getImageFileName());
-        if (is != null && playerToken != null) {
-            playerToken.setImage(new Image(is));
-        }
-
-        player.setInHouse(true);
-        updateTokenPosition();
-        updateInventoryUI();
-
-        // Nastavíme úvodní kostku na č. 1
-        setDiceImage(1);
-
-        if (statusLabel != null) {
-            statusLabel.setText("Na tahu: " + player.getHeroClass().getName() + " (Musíš hodit 6 pro vyjetí)");
-        }
-    }
-
-    private void setupBoardUI() {
-        if (boardContainer == null) return;
-
-        boardContainer.getChildren().clear();
-
-        ImageView boardImage = new ImageView();
-        InputStream is = getClass().getResourceAsStream("/images/board.png");
-        if (is != null) {
-            boardImage.setImage(new Image(is));
-        }
-
-        boardImage.setFitWidth(BOARD_WIDTH);
-        boardImage.setFitHeight(BOARD_HEIGHT);
-        boardImage.setPreserveRatio(false);
-
-        tokenLayer = new Pane();
-        tokenLayer.setPrefSize(BOARD_WIDTH, BOARD_HEIGHT);
-        tokenLayer.setMaxSize(BOARD_WIDTH, BOARD_HEIGHT);
-
-        // Prvek pro kostku umístěný do přesného středu desky
-        diceImageView = new ImageView();
-        diceImageView.setFitWidth(DICE_SIZE);
-        diceImageView.setFitHeight(DICE_SIZE);
-        diceImageView.setLayoutX((BOARD_WIDTH - DICE_SIZE) / 2.0);
-        diceImageView.setLayoutY((BOARD_HEIGHT - DICE_SIZE) / 2.0);
-
-        playerToken = new ImageView();
-        playerToken.setFitWidth(TOKEN_SIZE);
-        playerToken.setFitHeight(TOKEN_SIZE);
-        playerToken.setPreserveRatio(true);
-
-        tokenLayer.getChildren().addAll(diceImageView, playerToken);
-        boardContainer.getChildren().addAll(boardImage, tokenLayer);
-    }
-
-    private void animateMovement(int steps) {
-        Timeline timeline = new Timeline();
-
-        for (int i = 1; i <= steps; i++) {
-            final int stepNumber = i;
-            KeyFrame keyFrame = new KeyFrame(Duration.millis(250 * stepNumber), event -> {
-                player.stepToTile(player.getCurrentTileIndex() + 1);
-                updateTokenPosition();
-            });
-            timeline.getKeyFrames().add(keyFrame);
-        }
-
-        timeline.setOnFinished(event -> {
-            player.setHasRolledThisTurn(false);
-
-            if (!player.isInHouse() && BoardPath.isItemTile(player.getCurrentTileIndex())) {
-                if (player.getInventory().size() < 3) {
-                    Item newItem = Item.getRandomItem();
-                    player.addItem(newItem);
-                    updateInventoryUI();
-                    if (statusLabel != null) {
-                        statusLabel.setText("Stoupl jsi na truhlu! Získal jsi: " + newItem.getName());
-                    }
-                } else if (statusLabel != null) {
-                    statusLabel.setText("Stoupl jsi na truhlu, ale inventář máš plný!");
-                }
-            }
-        });
-
-        timeline.play();
-    }
-
-    private void updateInventoryUI() {
-        if (player == null) return;
-
-        ImageView[] slots = {itemSlot1, itemSlot2, itemSlot3};
-        List<Item> inventory = player.getInventory();
-
-        for (int i = 0; i < slots.length; i++) {
-            if (slots[i] == null) continue;
-
-            if (i < inventory.size()) {
-                Item item = inventory.get(i);
-                InputStream is = getClass().getResourceAsStream("/images/" + item.getImageFileName());
-                if (is != null) {
-                    slots[i].setImage(new Image(is));
-                } else {
-                    slots[i].setImage(null);
-                }
-            } else {
-                slots[i].setImage(null);
-            }
-        }
-    }
+    @FXML private void zavritVyberPredmetu() { if (itemSelectionOverlay != null) itemSelectionOverlay.setVisible(false); }
 
     private void populateItemSelectionOverlay() {
-        if (itemCardsContainer == null || player == null) return;
-
+        if (itemCardsContainer == null) return;
         itemCardsContainer.getChildren().clear();
-        List<Item> inventory = player.getInventory();
+
+        Player p = getCurrentPlayer();
+        List<Item> inventory = p.getInventory();
 
         if (inventory.isEmpty()) {
-            Label emptyLabel = new Label("V inventáři zatím nemáš žádné předměty.");
-            emptyLabel.setStyle("-fx-text-fill: #a0a0a0; -fx-font-size: 16px; -fx-font-style: italic;");
+            Label emptyLabel = new Label("V inventáři nemáš žádné předměty.");
+            emptyLabel.setStyle("-fx-text-fill: #a0a0a0; -fx-font-size: 16px;");
             itemCardsContainer.getChildren().add(emptyLabel);
             return;
         }
 
         for (Item item : inventory) {
-            VBox card = new VBox(12);
+            VBox card = new VBox(10);
             card.setAlignment(Pos.CENTER);
-            card.setPrefSize(220, 260);
-            card.setStyle("-fx-background-color: #2c2c2e; -fx-border-color: #FFD700; -fx-border-width: 1.5px; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-padding: 15px;");
+            card.setPrefSize(200, 240);
+            card.setStyle("-fx-background-color: #2c2c2e; -fx-border-color: #FFD700; -fx-border-radius: 8px; -fx-padding: 10px;");
 
             ImageView imgView = new ImageView();
             InputStream is = getClass().getResourceAsStream("/images/" + item.getImageFileName());
             if (is != null) imgView.setImage(new Image(is));
-            imgView.setFitWidth(50);
-            imgView.setFitHeight(50);
-            imgView.setPreserveRatio(true);
+            imgView.setFitWidth(45);
+            imgView.setFitHeight(45);
 
             Label nameLabel = new Label(item.getName());
-            nameLabel.setStyle("-fx-text-fill: #FFD700; -fx-font-weight: bold; -fx-font-size: 16px;");
+            nameLabel.setStyle("-fx-text-fill: #FFD700; -fx-font-weight: bold;");
 
             Label descLabel = new Label(item.getDescription());
-            descLabel.setStyle("-fx-text-fill: #d1d1d6; -fx-font-size: 12px; -fx-text-alignment: center;");
+            descLabel.setStyle("-fx-text-fill: white; -fx-font-size: 11px;");
             descLabel.setWrapText(true);
-            descLabel.setMaxWidth(190);
 
             Button useBtn = new Button("Použít");
-            useBtn.setStyle("-fx-background-color: #2ed573; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 4px; -fx-padding: 6px 16px;");
             useBtn.setOnAction(e -> {
-                player.getInventory().remove(item);
+                p.getInventory().remove(item);
+                applyItemEffect(item);
                 updateInventoryUI();
                 zavritVyberPredmetu();
-                if (statusLabel != null) {
-                    statusLabel.setText("Použil jsi předmět: " + item.getName());
-                }
             });
 
             card.getChildren().addAll(imgView, nameLabel, descLabel, useBtn);
@@ -311,18 +354,114 @@ public class GameController {
         }
     }
 
-    private void updateTokenPosition() {
-        if (playerToken == null || player == null) return;
+    private void applyItemEffect(Item item) {
+        Player p = getCurrentPlayer();
+        switch (item) {
+            case TELEPORT:
+                Player target = null;
+                for (Player other : players) {
+                    if (other != p && !other.isInHouse() && !other.isFinished()) {
+                        target = other;
+                        break;
+                    }
+                }
+                if (target != null) {
+                    int tempTile = p.getCurrentTileIndex();
+                    p.stepToTile(target.getCurrentTileIndex());
+                    target.stepToTile(tempTile);
 
+                    updateSingleTokenPosition(p, getCurrentToken());
+                    updateSingleTokenPosition(target, playerTokens.get(players.indexOf(target)));
+                    if (statusLabel != null) statusLabel.setText("Prohodil jsi si pozici s Hráčem " + target.getId() + "!");
+                }
+                break;
+
+            case STASTNA_SEDMA:
+                if (!p.isInHouse() && !p.isFinished()) {
+                    animateMovement(p, getCurrentToken(), 7, () -> checkKickout(p));
+                    if (statusLabel != null) statusLabel.setText("Použil jsi Šťastnou sedmu a posunul se o 7 políček!");
+                }
+                break;
+
+            case CMAJZ:
+                Player victim = null;
+                for (Player other : players) {
+                    if (other != p && !other.getInventory().isEmpty()) {
+                        victim = other;
+                        break;
+                    }
+                }
+                if (victim != null) {
+                    Item stolen = victim.getInventory().remove(0);
+                    p.addItem(stolen);
+                    updateInventoryUI();
+                    if (statusLabel != null) statusLabel.setText("Čmajzl jsi předmět " + stolen.getName() + " Hráči " + victim.getId() + "!");
+                }
+                break;
+        }
+    }
+
+    private void setDiceImage(int diceValue) {
+        if (diceImageView == null) return;
+        InputStream is = getClass().getResourceAsStream("/images/kostka" + diceValue + ".png");
+        if (is != null) diceImageView.setImage(new Image(is));
+    }
+
+    private void setupBoardUI() {
+        if (boardContainer == null) return;
+        boardContainer.getChildren().clear();
+
+        ImageView boardImage = new ImageView();
+        InputStream is = getClass().getResourceAsStream("/images/board.png");
+        if (is != null) boardImage.setImage(new Image(is));
+        boardImage.setFitWidth(BOARD_WIDTH);
+        boardImage.setFitHeight(BOARD_HEIGHT);
+
+        tokenLayer = new Pane();
+        tokenLayer.setPrefSize(BOARD_WIDTH, BOARD_HEIGHT);
+
+        diceImageView = new ImageView();
+        diceImageView.setFitWidth(DICE_SIZE);
+        diceImageView.setFitHeight(DICE_SIZE);
+        diceImageView.setLayoutX((BOARD_WIDTH - DICE_SIZE) / 2.0);
+        diceImageView.setLayoutY((BOARD_HEIGHT - DICE_SIZE) / 2.0);
+
+        tokenLayer.getChildren().add(diceImageView);
+        boardContainer.getChildren().addAll(boardImage, tokenLayer);
+    }
+
+    private void updateSingleTokenPosition(Player p, ImageView token) {
+        if (token == null) return;
         double offset = TOKEN_SIZE / 2.0;
 
-        if (player.isInHouse()) {
-            playerToken.setLayoutX(player.getHeroClass().getHomeX() - offset);
-            playerToken.setLayoutY(player.getHeroClass().getHomeY() - offset);
+        if (p.isInHouse()) {
+            token.setLayoutX(p.getHeroClass().getHomeX() - offset);
+            token.setLayoutY(p.getHeroClass().getHomeY() - offset);
         } else {
-            TilePosition tile = BoardPath.getTile(player.getCurrentTileIndex());
-            playerToken.setLayoutX(tile.getX() - offset);
-            playerToken.setLayoutY(tile.getY() - offset);
+            TilePosition tile = BoardPath.getTile(p.getCurrentTileIndex());
+            token.setLayoutX(tile.getX() - offset);
+            token.setLayoutY(tile.getY() - offset);
         }
+    }
+
+    private void updateInventoryUI() {
+        Player p = getCurrentPlayer();
+        ImageView[] slots = {itemSlot1, itemSlot2, itemSlot3};
+        List<Item> inv = p.getInventory();
+
+        for (int i = 0; i < slots.length; i++) {
+            if (slots[i] == null) continue;
+            if (i < inv.size()) {
+                InputStream is = getClass().getResourceAsStream("/images/" + inv.get(i).getImageFileName());
+                if (is != null) slots[i].setImage(new Image(is));
+            } else {
+                slots[i].setImage(null);
+            }
+        }
+    }
+
+    @FXML
+    private void zpetDoMenu() {
+        App.zmenScenu("/Menu.fxml");
     }
 }
