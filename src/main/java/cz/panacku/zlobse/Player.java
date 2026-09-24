@@ -13,6 +13,9 @@ public class Player {
     private boolean hasRolledThisTurn = false;
     private boolean abilityUsed = false;
 
+    private int score = 0;
+    public static final int TARGET_SCORE = 4;
+
     private boolean doubleRollActive = false;
     private boolean skipped = false;
 
@@ -36,11 +39,30 @@ public class Player {
     public void addSteps(int steps) { this.totalStepsMoved += steps; }
 
     public boolean isInHouse() { return inHouse; }
-    public void setInHouse(boolean inHouse) {
-        this.inHouse = inHouse;
+
+    public void resetToSpawn() {
+        this.inHouse = true;
         this.currentTileIndex = heroClass.getStartIndex();
         this.totalStepsMoved = 0;
     }
+
+    public void setInHouse(boolean inHouse) {
+        this.inHouse = inHouse;
+        if (inHouse) {
+            resetToSpawn();
+        }
+    }
+
+    public boolean isAtEntranceTile() {
+        return !inHouse && totalStepsMoved >= BoardPath.getPathLength();
+    }
+
+    public int getStepsToEntrance() {
+        return Math.max(0, BoardPath.getPathLength() - totalStepsMoved);
+    }
+
+    public int getScore() { return score; }
+    public void incrementScore() { this.score++; }
 
     public boolean isFinished() { return finished; }
     public void setFinished(boolean finished) { this.finished = finished; }

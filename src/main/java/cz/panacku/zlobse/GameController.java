@@ -4,7 +4,9 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -133,7 +135,7 @@ public class GameController {
         p.resetTurn();
         updateInventoryUI();
         if (statusLabel != null) {
-            statusLabel.setText("Na tahu je Hráč " + p.getId() + " (" + p.getHeroClass().getName() + ")");
+            statusLabel.setText("Na tahu je Hráč " + p.getId() + " (" + p.getHeroClass().getName() + ") | Domečky: " + p.getScore() + "/" + Player.TARGET_SCORE);
         }
     }
 
@@ -190,20 +192,53 @@ public class GameController {
                     checkKickout(p);
                     if (statusLabel != null) statusLabel.setText("Hráč " + p.getId() + " hodil 6 a vyjel na hrací plochu! Hází znovu.");
                 } else {
-                    if (statusLabel != null) statusLabel.setText("Hráč " + p.getId() + " hodil " + finalDiceValue + ". Pro vyjetí z domečku potřebuješ 6.");
+                    if (statusLabel != null) statusLabel.setText("Hráč " + p.getId() + " hodil " + finalDiceValue + ". Pro vyjetí ze spawnu potřebuješ 6.");
                     nextTurn();
                 }
+
+            } else if (p.isAtEntranceTile()) {
+                if (finalDiceValue == 1) {
+                    p.incrementScore();
+
+                    if (p.getScore() >= Player.TARGET_SCORE) {
+                        p.setFinished(true);
+                        zobrazitVitezneOkno(p);
+                        return;
+                    } else {
+                        p.resetToSpawn();
+                        updateSingleTokenPosition(p, getCurrentToken());
+                        if (statusLabel != null) {
+                            statusLabel.setText("🏠 Hráč " + p.getId() + " dostal figurku do domečku! ("
+                                    + p.getScore() + "/" + Player.TARGET_SCORE + "). Na spawnu vznikla nová figurka.");
+                        }
+                    }
+                } else {
+                    if (statusLabel != null) {
+                        statusLabel.setText("Jsi na svém startovním políčku před domečkem! Hodil jsi " + finalDiceValue + ", ale pro vstup potřebuješ 1.");
+                    }
+                }
+                nextTurn();
+
+                // 3. STAV: BĚŽNÝ POHYB PO HRACÍ DESCE
             } else {
                 int steps = finalDiceValue;
                 if (p.isDoubleRollActive()) {
                     steps *= 2;
                     p.setDoubleRollActive(false);
-                    if (statusLabel != null) statusLabel.setText("Dvojitý hod aktivován! Posun o " + steps + " políček.");
                 }
 
-                animateMovement(p, getCurrentToken(), steps, () -> {
+                // Omezení pohybu na přesný počet kroků zbývajících do startovního políčka
+                int stepsToEntrance = p.getStepsToEntrance();
+                int actualSteps = Math.min(steps, stepsToEntrance);
+
+                animateMovement(p, getCurrentToken(), actualSteps, () -> {
                     checkKickout(p);
-                    if (finalDiceValue == 6) {
+                    if (p.isAtEntranceTile()) {
+                        if (statusLabel != null) {
+                            statusLabel.setText("Hráč " + p.getId() + " obkroužil hrací plochu a stojí na svém startovním políčku! V příštím tahu musí hodit 1 pro vstup do domečku.");
+                        }
+                        nextTurn();
+                    } else if (finalDiceValue == 6) {
                         p.setHasRolledThisTurn(false);
                         if (statusLabel != null) statusLabel.setText("Hodil jsi 6! Házíš znovu.");
                     } else {
@@ -222,7 +257,7 @@ public class GameController {
         for (Player defender : players) {
             if (defender != attacker && !defender.isInHouse() && !defender.isFinished()) {
                 if (defender.getCurrentTileIndex() == attacker.getCurrentTileIndex()) {
-                    defender.setInHouse(true);
+                    defender.resetToSpawn();
                     int defenderIndex = players.indexOf(defender);
                     updateSingleTokenPosition(defender, playerTokens.get(defenderIndex));
 
@@ -238,7 +273,6 @@ public class GameController {
     @FXML
     private void pouzitSchopnost() {
         Player p = getCurrentPlayer();
-
         if (p.hasUsedAbility()) {
             if (statusLabel != null) statusLabel.setText("Svou speciální schopnost jsi již v této hře použil!");
             return;
@@ -251,8 +285,8 @@ public class GameController {
 
             case KOUZELNIK:
                 p.setDoubleRollActive(true);
-                p.setAbilityUsed(true); // Označeno jako použité
-                if (statusLabel != null) statusLabel.setText("Kouzelník seslal Dvojitý hod! Tvůj následující hod bude zdvojnásoben. (Schopnost vyčerpána)");
+                p.setAbilityUsed(true);
+                if (statusLabel != null) statusLabel.setText("Kouzelník seslal Dvojitý hod! Tvůj následující hod bude zdvojnásoben.");
                 break;
 
             case BANDITA:
@@ -260,8 +294,8 @@ public class GameController {
                 Player victim = players.get(nextIdx);
                 victim.setSkipped(true);
                 p.setHasRolledThisTurn(false);
-                p.setAbilityUsed(true); // Označeno jako použité
-                if (statusLabel != null) statusLabel.setText("Bandita ukradl tah Hráči " + victim.getId() + "! Házíš znovu a soupeř bude stát. (Schopnost vyčerpána)");
+                p.setAbilityUsed(true);
+                if (statusLabel != null) statusLabel.setText("Bandita ukradl tah Hráči " + victim.getId() + "! Házíš znovu.");
                 break;
 
             case NEKROMANT:
@@ -378,8 +412,10 @@ public class GameController {
 
             case STASTNA_SEDMA:
                 if (!p.isInHouse() && !p.isFinished()) {
-                    animateMovement(p, getCurrentToken(), 7, () -> checkKickout(p));
-                    if (statusLabel != null) statusLabel.setText("Použil jsi Šťastnou sedmu a posunul se o 7 políček!");
+                    int stepsToEntrance = p.getStepsToEntrance();
+                    int actualSteps = Math.min(7, stepsToEntrance);
+                    animateMovement(p, getCurrentToken(), actualSteps, () -> checkKickout(p));
+                    if (statusLabel != null) statusLabel.setText("Použil jsi Šťastnou sedmu!");
                 }
                 break;
 
@@ -458,6 +494,20 @@ public class GameController {
                 slots[i].setImage(null);
             }
         }
+    }
+
+    private void zobrazitVitezneOkno(Player vitez) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Konec hry!");
+        alert.setHeaderText("🎉 VÍTĚZSTVÍ! 🎉");
+        alert.setContentText("Hráč " + vitez.getId() + " (" + vitez.getHeroClass().getName()
+                + ") úspěšně dovedl všechny 4 figurky do domečku a VYHRÁVÁ HRU!");
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                App.zmenScenu("/Menu.fxml");
+            }
+        });
     }
 
     @FXML
