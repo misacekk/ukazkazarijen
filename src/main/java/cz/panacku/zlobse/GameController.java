@@ -219,7 +219,6 @@ public class GameController {
                 }
                 nextTurn();
 
-                // 3. STAV: BĚŽNÝ POHYB PO HRACÍ DESCE
             } else {
                 int steps = finalDiceValue;
                 if (p.isDoubleRollActive()) {
@@ -227,7 +226,6 @@ public class GameController {
                     p.setDoubleRollActive(false);
                 }
 
-                // Omezení pohybu na přesný počet kroků zbývajících do startovního políčka
                 int stepsToEntrance = p.getStepsToEntrance();
                 int actualSteps = Math.min(steps, stepsToEntrance);
 
@@ -257,13 +255,32 @@ public class GameController {
         for (Player defender : players) {
             if (defender != attacker && !defender.isInHouse() && !defender.isFinished()) {
                 if (defender.getCurrentTileIndex() == attacker.getCurrentTileIndex()) {
-                    defender.resetToSpawn();
-                    int defenderIndex = players.indexOf(defender);
-                    updateSingleTokenPosition(defender, playerTokens.get(defenderIndex));
+                    if (defender.getHeroClass() == HeroClass.RYTIR) {
+                        if (statusLabel != null) {
+                            statusLabel.setText("🛡️ Hráč " + defender.getId() + " (Rytíř) zblokoval vyhození Ocelovým štítem!");
+                        }
+                        continue;
+                    }
 
-                    if (statusLabel != null) {
-                        statusLabel.setText("💥 Hráč " + attacker.getId() + " (" + attacker.getHeroClass().getName()
-                                + ") vyhodil Hráče " + defender.getId() + " (" + defender.getHeroClass().getName() + ") zpět na spawn!");
+                    int defenderIndex = players.indexOf(defender);
+
+                    if (defender.getHeroClass() == HeroClass.NEKROMANT) {
+                        defender.setInHouse(false);
+                        defender.stepToTile(defender.getHeroClass().getStartIndex());
+                        defender.setTotalStepsMoved(0);
+                        updateSingleTokenPosition(defender, playerTokens.get(defenderIndex));
+
+                        if (statusLabel != null) {
+                            statusLabel.setText("💀 Hráč " + defender.getId() + " (Nekromant) byl vyhozen, ale díky Reanimaci se ihned znovuzrodil na startovním políčku!");
+                        }
+                    } else {
+                        defender.resetToSpawn();
+                        updateSingleTokenPosition(defender, playerTokens.get(defenderIndex));
+
+                        if (statusLabel != null) {
+                            statusLabel.setText("💥 Hráč " + attacker.getId() + " (" + attacker.getHeroClass().getName()
+                                    + ") vyhodil Hráče " + defender.getId() + " (" + defender.getHeroClass().getName() + ") zpět na spawn!");
+                        }
                     }
                 }
             }
@@ -401,8 +418,13 @@ public class GameController {
                 }
                 if (target != null) {
                     int tempTile = p.getCurrentTileIndex();
+                    int tempSteps = p.getTotalStepsMoved();
+
                     p.stepToTile(target.getCurrentTileIndex());
+                    p.setTotalStepsMoved(target.getTotalStepsMoved());
+
                     target.stepToTile(tempTile);
+                    target.setTotalStepsMoved(tempSteps);
 
                     updateSingleTokenPosition(p, getCurrentToken());
                     updateSingleTokenPosition(target, playerTokens.get(players.indexOf(target)));

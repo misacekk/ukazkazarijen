@@ -36,6 +36,7 @@ public class Player {
     }
 
     public int getTotalStepsMoved() { return totalStepsMoved; }
+    public void setTotalStepsMoved(int totalStepsMoved) { this.totalStepsMoved = totalStepsMoved; }
     public void addSteps(int steps) { this.totalStepsMoved += steps; }
 
     public boolean isInHouse() { return inHouse; }
