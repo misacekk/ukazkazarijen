@@ -6,67 +6,39 @@ import java.util.List;
 public class Player {
     private final int id;
     private final HeroClass heroClass;
-    private int currentTileIndex;
-    private int totalStepsMoved = 0;
-    private boolean inHouse = true;
-    private boolean finished = false;
+    private final List<Pawn> pawns = new ArrayList<>();
+
     private boolean hasRolledThisTurn = false;
     private boolean abilityUsed = false;
-
-    private int score = 0;
-    public static final int TARGET_SCORE = 4;
-
     private boolean doubleRollActive = false;
     private boolean skipped = false;
 
+    public static final int TARGET_SCORE = 4;
     private final List<Item> inventory = new ArrayList<>();
 
     public Player(int id, HeroClass heroClass) {
         this.id = id;
         this.heroClass = heroClass;
-        this.currentTileIndex = heroClass.getStartIndex();
+        for (int i = 0; i < 4; i++) {
+            this.pawns.add(new Pawn(i, this));
+        }
     }
 
     public int getId() { return id; }
     public HeroClass getHeroClass() { return heroClass; }
-    public int getCurrentTileIndex() { return currentTileIndex; }
+    public List<Pawn> getPawns() { return pawns; }
 
-    public void stepToTile(int index) {
-        this.currentTileIndex = (index % BoardPath.getPathLength() + BoardPath.getPathLength()) % BoardPath.getPathLength();
-    }
-
-    public int getTotalStepsMoved() { return totalStepsMoved; }
-    public void setTotalStepsMoved(int totalStepsMoved) { this.totalStepsMoved = totalStepsMoved; }
-    public void addSteps(int steps) { this.totalStepsMoved += steps; }
-
-    public boolean isInHouse() { return inHouse; }
-
-    public void resetToSpawn() {
-        this.inHouse = true;
-        this.currentTileIndex = heroClass.getStartIndex();
-        this.totalStepsMoved = 0;
-    }
-
-    public void setInHouse(boolean inHouse) {
-        this.inHouse = inHouse;
-        if (inHouse) {
-            resetToSpawn();
+    public int getScore() {
+        int count = 0;
+        for (Pawn p : pawns) {
+            if (p.isInFinish()) count++;
         }
+        return count;
     }
 
-    public boolean isAtEntranceTile() {
-        return !inHouse && totalStepsMoved >= BoardPath.getPathLength();
+    public boolean isFinished() {
+        return getScore() >= TARGET_SCORE;
     }
-
-    public int getStepsToEntrance() {
-        return Math.max(0, BoardPath.getPathLength() - totalStepsMoved);
-    }
-
-    public int getScore() { return score; }
-    public void incrementScore() { this.score++; }
-
-    public boolean isFinished() { return finished; }
-    public void setFinished(boolean finished) { this.finished = finished; }
 
     public boolean hasRolledThisTurn() { return hasRolledThisTurn; }
     public void setHasRolledThisTurn(boolean hasRolledThisTurn) { this.hasRolledThisTurn = hasRolledThisTurn; }
@@ -90,5 +62,22 @@ public class Player {
 
     public void resetTurn() {
         this.hasRolledThisTurn = false;
+    }
+
+    public Pawn getPawnInHouse() {
+        for (Pawn p : pawns) {
+            if (p.isInHouse()) return p;
+        }
+        return null;
+    }
+
+    public List<Pawn> getPawnsOnBoard() {
+        List<Pawn> list = new ArrayList<>();
+        for (Pawn p : pawns) {
+            if (!p.isInHouse() && !p.isInFinish()) {
+                list.add(p);
+            }
+        }
+        return list;
     }
 }

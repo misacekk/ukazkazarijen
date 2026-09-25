@@ -18,7 +18,9 @@ import javafx.util.Duration;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 public class GameController {
@@ -27,7 +29,10 @@ public class GameController {
     @FXML private VBox modeSelectionBox;
     @FXML private VBox heroSelectionBox;
     @FXML private Label selectionTitleLabel;
-    @FXML private Button btnRytir, btnKouzelnik, btnBandita, btnNekromant;
+
+    // Tlačítka pro 6 hrdinů (3 nahoře, 3 dole)
+    @FXML private Button btnRytir, btnKouzelnik, btnBandita;
+    @FXML private Button btnNekromant, btnLovkyne, btnPaladinka;
 
     @FXML private VBox gameContent;
     @FXML private StackPane boardContainer;
@@ -44,14 +49,19 @@ public class GameController {
 
     private int targetPlayerCount = 2;
     private final List<Player> players = new ArrayList<>();
-    private final List<ImageView> playerTokens = new ArrayList<>();
+    private final Map<Pawn, ImageView> pawnTokenMap = new HashMap<>();
     private int currentPlayerIndex = 0;
+
+    private boolean waitingForPawnSelection = false;
+    private List<Pawn> movablePawnsCurrentTurn = new ArrayList<>();
+    private boolean canSpawnCurrentTurn = false;
+    private int lastRolledDiceValue = 0;
 
     private final Random random = new Random();
 
     private static final double BOARD_WIDTH = 1400.0;
     private static final double BOARD_HEIGHT = 800.0;
-    private static final double TOKEN_SIZE = 50.0;
+    private static final double TOKEN_SIZE = 45.0;
     private static final double DICE_SIZE = 100.0;
 
     @FXML
@@ -66,7 +76,9 @@ public class GameController {
         setupBoardUI();
     }
 
+    // Výběr režimů hry (1v1, 1v1v1, 1v1v1v1)
     @FXML private void zvolitRezim2() { startHeroSelection(2); }
+    @FXML private void zvolitRezim3() { startHeroSelection(3); }
     @FXML private void zvolitRezim4() { startHeroSelection(4); }
 
     private void startHeroSelection(int count) {
@@ -76,28 +88,35 @@ public class GameController {
         updateHeroSelectionUI();
     }
 
+    // Handlery pro tlačítka hrdinů
     @FXML private void zvolitRytire() { addPlayerHero(HeroClass.RYTIR); }
     @FXML private void zvolitKouzelnika() { addPlayerHero(HeroClass.KOUZELNIK); }
     @FXML private void zvolitBanditu() { addPlayerHero(HeroClass.BANDITA); }
     @FXML private void zvolitNekromanta() { addPlayerHero(HeroClass.NEKROMANT); }
+    @FXML private void zvolitLovkyni() { addPlayerHero(HeroClass.LOVKYNE); }
+    @FXML private void zvolitPaladinku() { addPlayerHero(HeroClass.PALADINKA); }
 
     private void addPlayerHero(HeroClass heroClass) {
         int newPlayerId = players.size() + 1;
         Player p = new Player(newPlayerId, heroClass);
         players.add(p);
 
-        ImageView tokenView = new ImageView();
-        tokenView.setFitWidth(TOKEN_SIZE);
-        tokenView.setFitHeight(TOKEN_SIZE);
-        tokenView.setPreserveRatio(true);
+        for (Pawn pawn : p.getPawns()) {
+            ImageView tokenView = new ImageView();
+            tokenView.setFitWidth(TOKEN_SIZE);
+            tokenView.setFitHeight(TOKEN_SIZE);
+            tokenView.setPreserveRatio(true);
 
-        InputStream is = getClass().getResourceAsStream("/images/" + heroClass.getImageFileName());
-        if (is != null) tokenView.setImage(new Image(is));
+            InputStream is = getClass().getResourceAsStream("/images/" + heroClass.getImageFileName());
+            if (is != null) tokenView.setImage(new Image(is));
 
-        playerTokens.add(tokenView);
-        if (tokenLayer != null) tokenLayer.getChildren().add(tokenView);
+            tokenView.setOnMouseClicked(e -> handlePawnClick(pawn));
 
-        updateSingleTokenPosition(p, tokenView);
+            pawnTokenMap.put(pawn, tokenView);
+            if (tokenLayer != null) tokenLayer.getChildren().add(tokenView);
+
+            updatePawnPosition(pawn);
+        }
 
         if (players.size() < targetPlayerCount) {
             updateHeroSelectionUI();
@@ -119,6 +138,8 @@ public class GameController {
         disableIfTaken(btnKouzelnik, HeroClass.KOUZELNIK);
         disableIfTaken(btnBandita, HeroClass.BANDITA);
         disableIfTaken(btnNekromant, HeroClass.NEKROMANT);
+        disableIfTaken(btnLovkyne, HeroClass.LOVKYNE);
+        disableIfTaken(btnPaladinka, HeroClass.PALADINKA);
     }
 
     private void disableIfTaken(Button btn, HeroClass heroClass) {
@@ -128,12 +149,15 @@ public class GameController {
     }
 
     private Player getCurrentPlayer() { return players.get(currentPlayerIndex); }
-    private ImageView getCurrentToken() { return playerTokens.get(currentPlayerIndex); }
 
     private void startTurn() {
         Player p = getCurrentPlayer();
         p.resetTurn();
+        waitingForPawnSelection = false;
+        movablePawnsCurrentTurn.clear();
+        canSpawnCurrentTurn = false;
         updateInventoryUI();
+
         if (statusLabel != null) {
             statusLabel.setText("Na tahu je Hráč " + p.getId() + " (" + p.getHeroClass().getName() + ") | Domečky: " + p.getScore() + "/" + Player.TARGET_SCORE);
         }
@@ -181,105 +205,150 @@ public class GameController {
         }
 
         diceAnimation.setOnFinished(event -> {
-            int finalDiceValue = random.nextInt(6) + 1;
-            setDiceImage(finalDiceValue);
+            int diceValue = random.nextInt(6) + 1;
+            setDiceImage(diceValue);
+            this.lastRolledDiceValue = diceValue;
 
-            if (p.isInHouse()) {
-                if (finalDiceValue == 6) {
-                    p.setInHouse(false);
-                    updateSingleTokenPosition(p, getCurrentToken());
-                    p.setHasRolledThisTurn(false);
-                    checkKickout(p);
-                    if (statusLabel != null) statusLabel.setText("Hráč " + p.getId() + " hodil 6 a vyjel na hrací plochu! Hází znovu.");
-                } else {
-                    if (statusLabel != null) statusLabel.setText("Hráč " + p.getId() + " hodil " + finalDiceValue + ". Pro vyjetí ze spawnu potřebuješ 6.");
-                    nextTurn();
-                }
+            int requiredSpawnRoll = (p.getHeroClass() == HeroClass.PALADINKA) ? 5 : 6;
+            canSpawnCurrentTurn = (diceValue >= requiredSpawnRoll) && (p.getPawnInHouse() != null);
+            movablePawnsCurrentTurn = p.getPawnsOnBoard();
 
-            } else if (p.isAtEntranceTile()) {
-                if (finalDiceValue == 1) {
-                    p.incrementScore();
-
-                    if (p.getScore() >= Player.TARGET_SCORE) {
-                        p.setFinished(true);
-                        zobrazitVitezneOkno(p);
-                        return;
-                    } else {
-                        p.resetToSpawn();
-                        updateSingleTokenPosition(p, getCurrentToken());
-                        if (statusLabel != null) {
-                            statusLabel.setText("🏠 Hráč " + p.getId() + " dostal figurku do domečku! ("
-                                    + p.getScore() + "/" + Player.TARGET_SCORE + "). Na spawnu vznikla nová figurka.");
-                        }
-                    }
-                } else {
-                    if (statusLabel != null) {
-                        statusLabel.setText("Jsi na svém startovním políčku před domečkem! Hodil jsi " + finalDiceValue + ", ale pro vstup potřebuješ 1.");
-                    }
+            if (!canSpawnCurrentTurn && movablePawnsCurrentTurn.isEmpty()) {
+                if (statusLabel != null) {
+                    statusLabel.setText("Hráč " + p.getId() + " hodil " + diceValue + ", ale nemá žádný možný tah.");
                 }
                 nextTurn();
+                return;
+            }
 
+            if (canSpawnCurrentTurn && movablePawnsCurrentTurn.isEmpty()) {
+                executeSpawn(p.getPawnInHouse(), diceValue);
+            } else if (!canSpawnCurrentTurn && movablePawnsCurrentTurn.size() == 1) {
+                executePawnMove(movablePawnsCurrentTurn.get(0), diceValue);
             } else {
-                int steps = finalDiceValue;
-                if (p.isDoubleRollActive()) {
-                    steps *= 2;
-                    p.setDoubleRollActive(false);
+                waitingForPawnSelection = true;
+                if (statusLabel != null) {
+                    statusLabel.setText("Hodil jsi " + diceValue + "! Klikni na figurku na spawnu nebo na desce, se kterou chceš jet.");
                 }
-
-                int stepsToEntrance = p.getStepsToEntrance();
-                int actualSteps = Math.min(steps, stepsToEntrance);
-
-                animateMovement(p, getCurrentToken(), actualSteps, () -> {
-                    checkKickout(p);
-                    if (p.isAtEntranceTile()) {
-                        if (statusLabel != null) {
-                            statusLabel.setText("Hráč " + p.getId() + " obkroužil hrací plochu a stojí na svém startovním políčku! V příštím tahu musí hodit 1 pro vstup do domečku.");
-                        }
-                        nextTurn();
-                    } else if (finalDiceValue == 6) {
-                        p.setHasRolledThisTurn(false);
-                        if (statusLabel != null) statusLabel.setText("Hodil jsi 6! Házíš znovu.");
-                    } else {
-                        nextTurn();
-                    }
-                });
             }
         });
 
         diceAnimation.play();
     }
 
-    private void checkKickout(Player attacker) {
-        if (attacker.isInHouse() || attacker.isFinished()) return;
+    private void handlePawnClick(Pawn clickedPawn) {
+        if (!waitingForPawnSelection) return;
+
+        Player p = getCurrentPlayer();
+        if (clickedPawn.getOwner() != p) return;
+
+        if (clickedPawn.isInHouse()) {
+            if (canSpawnCurrentTurn) {
+                waitingForPawnSelection = false;
+                executeSpawn(clickedPawn, lastRolledDiceValue);
+            }
+        } else if (!clickedPawn.isInFinish()) {
+            if (movablePawnsCurrentTurn.contains(clickedPawn)) {
+                waitingForPawnSelection = false;
+                executePawnMove(clickedPawn, lastRolledDiceValue);
+            }
+        }
+    }
+
+    private void executeSpawn(Pawn pawn, int diceValue) {
+        Player p = pawn.getOwner();
+        pawn.setInHouse(false);
+        updatePawnPosition(pawn);
+        checkKickout(pawn);
+
+        if (statusLabel != null) {
+            statusLabel.setText("Hráč " + p.getId() + " nasadil novou figurku! Hází znovu.");
+        }
+        p.setHasRolledThisTurn(false);
+    }
+
+    private void executePawnMove(Pawn pawn, int diceValue) {
+        Player p = pawn.getOwner();
+
+        if (pawn.isAtEntranceTile()) {
+            if (diceValue == 1) {
+                pawn.setInFinish(true);
+                updatePawnPosition(pawn);
+
+                if (p.isFinished()) {
+                    zobrazitVitezneOkno(p);
+                    return;
+                } else {
+                    if (statusLabel != null) {
+                        statusLabel.setText("🏠 Figurka Hráče " + p.getId() + " dorazila do domečku! (" + p.getScore() + "/4)");
+                    }
+                }
+            } else {
+                if (statusLabel != null) {
+                    statusLabel.setText("Figurka je před domečkem! Pro vstup potřebuješ hodit 1.");
+                }
+            }
+            nextTurn();
+            return;
+        }
+
+        int steps = diceValue;
+        if (p.isDoubleRollActive()) {
+            steps *= 2;
+            p.setDoubleRollActive(false);
+        }
+
+        int stepsToEntrance = pawn.getStepsToEntrance();
+        int actualSteps = Math.min(steps, stepsToEntrance);
+
+        animatePawnMovement(pawn, actualSteps, () -> {
+            checkKickout(pawn);
+            if (pawn.isAtEntranceTile()) {
+                if (statusLabel != null) {
+                    statusLabel.setText("Figurka obkroužila desku a stojí před domečkem!");
+                }
+                nextTurn();
+            } else if (diceValue == 6) {
+                p.setHasRolledThisTurn(false);
+                if (statusLabel != null) statusLabel.setText("Hodil jsi 6! Házíš znovu.");
+            } else {
+                nextTurn();
+            }
+        });
+    }
+
+    private void checkKickout(Pawn attackerPawn) {
+        if (attackerPawn.isInHouse() || attackerPawn.isInFinish()) return;
 
         for (Player defender : players) {
-            if (defender != attacker && !defender.isInHouse() && !defender.isFinished()) {
-                if (defender.getCurrentTileIndex() == attacker.getCurrentTileIndex()) {
-                    if (defender.getHeroClass() == HeroClass.RYTIR) {
-                        if (statusLabel != null) {
-                            statusLabel.setText("🛡️ Hráč " + defender.getId() + " (Rytíř) zblokoval vyhození Ocelovým štítem!");
+            if (defender == attackerPawn.getOwner()) continue;
+
+            for (Pawn defenderPawn : defender.getPawns()) {
+                if (!defenderPawn.isInHouse() && !defenderPawn.isInFinish()) {
+                    if (defenderPawn.getCurrentTileIndex() == attackerPawn.getCurrentTileIndex()) {
+                        if (defender.getHeroClass() == HeroClass.RYTIR) {
+                            if (statusLabel != null) {
+                                statusLabel.setText("🛡️ Hráč " + defender.getId() + " (Rytíř) zblokoval vyhození Ocelovým štítem!");
+                            }
+                            continue;
                         }
-                        continue;
-                    }
 
-                    int defenderIndex = players.indexOf(defender);
+                        if (defender.getHeroClass() == HeroClass.NEKROMANT) {
+                            defenderPawn.setInHouse(false);
+                            defenderPawn.stepToTile(defender.getHeroClass().getStartIndex());
+                            defenderPawn.setTotalStepsMoved(0);
+                            updatePawnPosition(defenderPawn);
 
-                    if (defender.getHeroClass() == HeroClass.NEKROMANT) {
-                        defender.setInHouse(false);
-                        defender.stepToTile(defender.getHeroClass().getStartIndex());
-                        defender.setTotalStepsMoved(0);
-                        updateSingleTokenPosition(defender, playerTokens.get(defenderIndex));
+                            if (statusLabel != null) {
+                                statusLabel.setText("💀 Nekromantova figurka byla vyhozena, ale díky Reanimaci se ihned objevila na startu!");
+                            }
+                        } else {
+                            defenderPawn.resetToSpawn();
+                            updatePawnPosition(defenderPawn);
 
-                        if (statusLabel != null) {
-                            statusLabel.setText("💀 Hráč " + defender.getId() + " (Nekromant) byl vyhozen, ale díky Reanimaci se ihned znovuzrodil na startovním políčku!");
-                        }
-                    } else {
-                        defender.resetToSpawn();
-                        updateSingleTokenPosition(defender, playerTokens.get(defenderIndex));
-
-                        if (statusLabel != null) {
-                            statusLabel.setText("💥 Hráč " + attacker.getId() + " (" + attacker.getHeroClass().getName()
-                                    + ") vyhodil Hráče " + defender.getId() + " (" + defender.getHeroClass().getName() + ") zpět na spawn!");
+                            if (statusLabel != null) {
+                                statusLabel.setText("💥 Figurka Hráče " + attackerPawn.getOwner().getId() + " vyhodila figurku Hráče " + defender.getId() + "!");
+                            }
                         }
                     }
                 }
@@ -297,13 +366,15 @@ public class GameController {
 
         switch (p.getHeroClass()) {
             case RYTIR:
-                if (statusLabel != null) statusLabel.setText("Rytíř má pasivní schopnost.");
+            case NEKROMANT:
+            case PALADINKA:
+                if (statusLabel != null) statusLabel.setText(p.getHeroClass().getName() + " má pasivní schopnost.");
                 break;
 
             case KOUZELNIK:
                 p.setDoubleRollActive(true);
                 p.setAbilityUsed(true);
-                if (statusLabel != null) statusLabel.setText("Kouzelník seslal Dvojitý hod! Tvůj následující hod bude zdvojnásoben.");
+                if (statusLabel != null) statusLabel.setText("Kouzelník seslal Dvojitý hod! Následující hod se zdvojnásobí.");
                 break;
 
             case BANDITA:
@@ -315,30 +386,56 @@ public class GameController {
                 if (statusLabel != null) statusLabel.setText("Bandita ukradl tah Hráči " + victim.getId() + "! Házíš znovu.");
                 break;
 
-            case NEKROMANT:
-                if (statusLabel != null) statusLabel.setText("Nekromant má pasivní schopnost.");
+            case LOVKYNE:
+                Pawn targetEnemyPawn = findTargetForLovkyne(p);
+                if (targetEnemyPawn != null) {
+                    targetEnemyPawn.resetToSpawn();
+                    updatePawnPosition(targetEnemyPawn);
+                    p.setAbilityUsed(true);
+                    if (statusLabel != null) {
+                        statusLabel.setText("🎯 Lovkyně použila Přesnou mušku a odstřelila soupeřovu figurku na spawn!");
+                    }
+                } else {
+                    if (statusLabel != null) statusLabel.setText("Žádná soupeřova figurka není v dosahu Přesné mušky (do 6 políček před tebou).");
+                }
                 break;
         }
     }
 
-    private void animateMovement(Player player, ImageView token, int steps, Runnable onComplete) {
+    private Pawn findTargetForLovkyne(Player lovkynePlayer) {
+        for (Pawn myPawn : lovkynePlayer.getPawnsOnBoard()) {
+            for (Player other : players) {
+                if (other == lovkynePlayer) continue;
+                for (Pawn enemyPawn : other.getPawnsOnBoard()) {
+                    int dist = (enemyPawn.getCurrentTileIndex() - myPawn.getCurrentTileIndex() + BoardPath.getPathLength()) % BoardPath.getPathLength();
+                    if (dist >= 1 && dist <= 6) {
+                        return enemyPawn;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private void animatePawnMovement(Pawn pawn, int steps, Runnable onComplete) {
         Timeline timeline = new Timeline();
 
         for (int i = 1; i <= steps; i++) {
             final int stepNum = i;
             KeyFrame kf = new KeyFrame(Duration.millis(220 * stepNum), event -> {
-                player.stepToTile(player.getCurrentTileIndex() + 1);
-                player.addSteps(1);
-                updateSingleTokenPosition(player, token);
+                pawn.stepToTile(pawn.getCurrentTileIndex() + 1);
+                pawn.addSteps(1);
+                updatePawnPosition(pawn);
             });
             timeline.getKeyFrames().add(kf);
         }
 
         timeline.setOnFinished(event -> {
-            if (BoardPath.isItemTile(player.getCurrentTileIndex())) {
-                if (player.getInventory().size() < 3) {
+            Player p = pawn.getOwner();
+            if (BoardPath.isItemTile(pawn.getCurrentTileIndex())) {
+                if (p.getInventory().size() < 3) {
                     Item item = Item.getRandomItem();
-                    player.addItem(item);
+                    p.addItem(item);
                     updateInventoryUI();
                     if (statusLabel != null) statusLabel.setText("Stoupl jsi na truhlu a získal: " + item.getName());
                 }
@@ -347,6 +444,26 @@ public class GameController {
         });
 
         timeline.play();
+    }
+
+    private void updatePawnPosition(Pawn pawn) {
+        ImageView token = pawnTokenMap.get(pawn);
+        if (token == null) return;
+
+        double offset = TOKEN_SIZE / 2.0;
+
+        if (pawn.isInHouse()) {
+            double homeX = pawn.getOwner().getHeroClass().getHomeX();
+            double homeY = pawn.getOwner().getHeroClass().getHomeY();
+            double offsetX = (pawn.getId() % 2) * 30.0;
+            double offsetY = (pawn.getId() / 2) * 30.0;
+            token.setLayoutX(homeX - offset + offsetX);
+            token.setLayoutY(homeY - offset + offsetY);
+        } else {
+            TilePosition tile = BoardPath.getTile(pawn.getCurrentTileIndex());
+            token.setLayoutX(tile.getX() - offset);
+            token.setLayoutY(tile.getY() - offset);
+        }
     }
 
     @FXML
@@ -409,34 +526,36 @@ public class GameController {
         Player p = getCurrentPlayer();
         switch (item) {
             case TELEPORT:
-                Player target = null;
+                Pawn myPawn = p.getPawnsOnBoard().isEmpty() ? null : p.getPawnsOnBoard().get(0);
+                Pawn targetPawn = null;
                 for (Player other : players) {
-                    if (other != p && !other.isInHouse() && !other.isFinished()) {
-                        target = other;
+                    if (other != p && !other.getPawnsOnBoard().isEmpty()) {
+                        targetPawn = other.getPawnsOnBoard().get(0);
                         break;
                     }
                 }
-                if (target != null) {
-                    int tempTile = p.getCurrentTileIndex();
-                    int tempSteps = p.getTotalStepsMoved();
+                if (myPawn != null && targetPawn != null) {
+                    int tempTile = myPawn.getCurrentTileIndex();
+                    int tempSteps = myPawn.getTotalStepsMoved();
 
-                    p.stepToTile(target.getCurrentTileIndex());
-                    p.setTotalStepsMoved(target.getTotalStepsMoved());
+                    myPawn.stepToTile(targetPawn.getCurrentTileIndex());
+                    myPawn.setTotalStepsMoved(targetPawn.getTotalStepsMoved());
 
-                    target.stepToTile(tempTile);
-                    target.setTotalStepsMoved(tempSteps);
+                    targetPawn.stepToTile(tempTile);
+                    targetPawn.setTotalStepsMoved(tempSteps);
 
-                    updateSingleTokenPosition(p, getCurrentToken());
-                    updateSingleTokenPosition(target, playerTokens.get(players.indexOf(target)));
-                    if (statusLabel != null) statusLabel.setText("Prohodil jsi si pozici s Hráčem " + target.getId() + "!");
+                    updatePawnPosition(myPawn);
+                    updatePawnPosition(targetPawn);
+                    if (statusLabel != null) statusLabel.setText("Prohodil jsi pozici figurky s soupeřem!");
                 }
                 break;
 
             case STASTNA_SEDMA:
-                if (!p.isInHouse() && !p.isFinished()) {
-                    int stepsToEntrance = p.getStepsToEntrance();
+                if (!p.getPawnsOnBoard().isEmpty()) {
+                    Pawn target = p.getPawnsOnBoard().get(0);
+                    int stepsToEntrance = target.getStepsToEntrance();
                     int actualSteps = Math.min(7, stepsToEntrance);
-                    animateMovement(p, getCurrentToken(), actualSteps, () -> checkKickout(p));
+                    animatePawnMovement(target, actualSteps, () -> checkKickout(target));
                     if (statusLabel != null) statusLabel.setText("Použil jsi Šťastnou sedmu!");
                 }
                 break;
@@ -486,20 +605,6 @@ public class GameController {
 
         tokenLayer.getChildren().add(diceImageView);
         boardContainer.getChildren().addAll(boardImage, tokenLayer);
-    }
-
-    private void updateSingleTokenPosition(Player p, ImageView token) {
-        if (token == null) return;
-        double offset = TOKEN_SIZE / 2.0;
-
-        if (p.isInHouse()) {
-            token.setLayoutX(p.getHeroClass().getHomeX() - offset);
-            token.setLayoutY(p.getHeroClass().getHomeY() - offset);
-        } else {
-            TilePosition tile = BoardPath.getTile(p.getCurrentTileIndex());
-            token.setLayoutX(tile.getX() - offset);
-            token.setLayoutY(tile.getY() - offset);
-        }
     }
 
     private void updateInventoryUI() {
