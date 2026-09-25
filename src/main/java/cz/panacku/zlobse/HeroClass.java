@@ -2,11 +2,11 @@ package cz.panacku.zlobse;
 
 public enum HeroClass {
     NEKROMANT("Nekromant", 33, 127.0, 87.0, "nekromant.png"),
-    KOUZELNIK("Kouzelník", 8, 1273.0, 82.0, "mag.png"),
+    CARODEJNICE("Čarodějnice", 8, 1273.0, 82.0, "witch.png"),
     BANDITA("Bandita", 16, 1267.0, 743.0, "bandita.png"),
     RYTIR("Rytíř", 25, 137.0, 758.0, "rytir.png"),
-    LOVKYNE("Lovkyně", 0, 300.0, 87.0, "lovkyne.png"),
-    PALADINKA("Paladinka", 10, 1100.0, 82.0, "paladinka.png");
+    ELFKA("Elfka", 0, 300.0, 87.0, "elf.png"),
+    KRALOVNA("Královna", 10, 1100.0, 82.0, "queen.png");
 
     private final String name;
     private final int startIndex;

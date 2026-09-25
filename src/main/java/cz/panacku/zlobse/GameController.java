@@ -30,9 +30,9 @@ public class GameController {
     @FXML private VBox heroSelectionBox;
     @FXML private Label selectionTitleLabel;
 
-    // Tlačítka pro 6 hrdinů (3 nahoře, 3 dole)
-    @FXML private Button btnRytir, btnKouzelnik, btnBandita;
-    @FXML private Button btnNekromant, btnLovkyne, btnPaladinka;
+    // Tlačítka pro 6 hrdinů
+    @FXML private Button btnRytir, btnCarodejnice, btnBandita;
+    @FXML private Button btnNekromant, btnElfka, btnKralovna;
 
     @FXML private VBox gameContent;
     @FXML private StackPane boardContainer;
@@ -40,9 +40,7 @@ public class GameController {
     @FXML private HBox itemCardsContainer;
     @FXML private VBox bottomBar;
     @FXML private Label statusLabel;
-    @FXML private ImageView itemSlot1;
-    @FXML private ImageView itemSlot2;
-    @FXML private ImageView itemSlot3;
+    @FXML private ImageView itemSlot1, itemSlot2, itemSlot3;
 
     private Pane tokenLayer;
     private ImageView diceImageView;
@@ -72,11 +70,13 @@ public class GameController {
         if (heroSelectionBox != null) heroSelectionBox.setVisible(false);
         if (bottomBar != null) bottomBar.setVisible(false);
         if (itemSelectionOverlay != null) itemSelectionOverlay.setVisible(false);
-
+        // Přidej do initialize() pro rychlé vygenerování souřadnic z klikání:
+        boardContainer.setOnMouseClicked(event -> {
+            System.out.println("PATH.add(new TilePosition(" + event.getX() + ", " + event.getY() + "));");
+        });
         setupBoardUI();
     }
 
-    // Výběr režimů hry (1v1, 1v1v1, 1v1v1v1)
     @FXML private void zvolitRezim2() { startHeroSelection(2); }
     @FXML private void zvolitRezim3() { startHeroSelection(3); }
     @FXML private void zvolitRezim4() { startHeroSelection(4); }
@@ -88,13 +88,12 @@ public class GameController {
         updateHeroSelectionUI();
     }
 
-    // Handlery pro tlačítka hrdinů
     @FXML private void zvolitRytire() { addPlayerHero(HeroClass.RYTIR); }
-    @FXML private void zvolitKouzelnika() { addPlayerHero(HeroClass.KOUZELNIK); }
+    @FXML private void zvolitCarodejnici() { addPlayerHero(HeroClass.CARODEJNICE); }
     @FXML private void zvolitBanditu() { addPlayerHero(HeroClass.BANDITA); }
     @FXML private void zvolitNekromanta() { addPlayerHero(HeroClass.NEKROMANT); }
-    @FXML private void zvolitLovkyni() { addPlayerHero(HeroClass.LOVKYNE); }
-    @FXML private void zvolitPaladinku() { addPlayerHero(HeroClass.PALADINKA); }
+    @FXML private void zvolitElfku() { addPlayerHero(HeroClass.ELFKA); }
+    @FXML private void zvolitKralovnu() { addPlayerHero(HeroClass.KRALOVNA); }
 
     private void addPlayerHero(HeroClass heroClass) {
         int newPlayerId = players.size() + 1;
@@ -135,11 +134,11 @@ public class GameController {
         }
 
         disableIfTaken(btnRytir, HeroClass.RYTIR);
-        disableIfTaken(btnKouzelnik, HeroClass.KOUZELNIK);
+        disableIfTaken(btnCarodejnice, HeroClass.CARODEJNICE);
         disableIfTaken(btnBandita, HeroClass.BANDITA);
         disableIfTaken(btnNekromant, HeroClass.NEKROMANT);
-        disableIfTaken(btnLovkyne, HeroClass.LOVKYNE);
-        disableIfTaken(btnPaladinka, HeroClass.PALADINKA);
+        disableIfTaken(btnElfka, HeroClass.ELFKA);
+        disableIfTaken(btnKralovna, HeroClass.KRALOVNA);
     }
 
     private void disableIfTaken(Button btn, HeroClass heroClass) {
@@ -209,8 +208,7 @@ public class GameController {
             setDiceImage(diceValue);
             this.lastRolledDiceValue = diceValue;
 
-            int requiredSpawnRoll = (p.getHeroClass() == HeroClass.PALADINKA) ? 5 : 6;
-            canSpawnCurrentTurn = (diceValue >= requiredSpawnRoll) && (p.getPawnInHouse() != null);
+            canSpawnCurrentTurn = (diceValue == 6) && (p.getPawnInHouse() != null);
             movablePawnsCurrentTurn = p.getPawnsOnBoard();
 
             if (!canSpawnCurrentTurn && movablePawnsCurrentTurn.isEmpty()) {
@@ -228,7 +226,7 @@ public class GameController {
             } else {
                 waitingForPawnSelection = true;
                 if (statusLabel != null) {
-                    statusLabel.setText("Hodil jsi " + diceValue + "! Klikni na figurku na spawnu nebo na desce, se kterou chceš jet.");
+                    statusLabel.setText("Hodil jsi " + diceValue + "! Klikni na figurku na spawnu nebo na desce.");
                 }
             }
         });
@@ -367,45 +365,54 @@ public class GameController {
         switch (p.getHeroClass()) {
             case RYTIR:
             case NEKROMANT:
-            case PALADINKA:
-                if (statusLabel != null) statusLabel.setText(p.getHeroClass().getName() + " má pasivní schopnost.");
+            case KRALOVNA:
+                if (statusLabel != null) statusLabel.setText(p.getHeroClass().getName() + " má pasivní schopnost (Královská imunita).");
                 break;
 
-            case KOUZELNIK:
+            case CARODEJNICE:
                 p.setDoubleRollActive(true);
                 p.setAbilityUsed(true);
-                if (statusLabel != null) statusLabel.setText("Kouzelník seslal Dvojitý hod! Následující hod se zdvojnásobí.");
+                if (statusLabel != null) statusLabel.setText("Čarodějnice seslala Dvojitý hod! Následující hod se zdvojnásobí.");
                 break;
 
             case BANDITA:
                 int nextIdx = (currentPlayerIndex + 1) % players.size();
                 Player victim = players.get(nextIdx);
-                victim.setSkipped(true);
-                p.setHasRolledThisTurn(false);
-                p.setAbilityUsed(true);
-                if (statusLabel != null) statusLabel.setText("Bandita ukradl tah Hráči " + victim.getId() + "! Házíš znovu.");
+
+                if (victim.getHeroClass() == HeroClass.KRALOVNA) {
+                    if (statusLabel != null) statusLabel.setText("Bandita se pokusil ukrást tah Královně, ale ta je vůči tomu imunní!");
+                } else {
+                    victim.setSkipped(true);
+                    p.setHasRolledThisTurn(false);
+                    p.setAbilityUsed(true);
+                    if (statusLabel != null) statusLabel.setText("Bandita ukradl tah Hráči " + victim.getId() + "! Házíš znovu.");
+                }
                 break;
 
-            case LOVKYNE:
-                Pawn targetEnemyPawn = findTargetForLovkyne(p);
+            case ELFKA:
+                Pawn targetEnemyPawn = findTargetForElfka(p);
                 if (targetEnemyPawn != null) {
-                    targetEnemyPawn.resetToSpawn();
-                    updatePawnPosition(targetEnemyPawn);
-                    p.setAbilityUsed(true);
-                    if (statusLabel != null) {
-                        statusLabel.setText("🎯 Lovkyně použila Přesnou mušku a odstřelila soupeřovu figurku na spawn!");
+                    if (targetEnemyPawn.getOwner().getHeroClass() == HeroClass.KRALOVNA) {
+                        if (statusLabel != null) statusLabel.setText("Elfka vystřelila, ale Královská imunita jí zabránila ublížit!");
+                    } else {
+                        targetEnemyPawn.resetToSpawn();
+                        updatePawnPosition(targetEnemyPawn);
+                        p.setAbilityUsed(true);
+                        if (statusLabel != null) {
+                            statusLabel.setText("🏹 Elfka zasáhla soupeřovu figurku Elfím šípem a poslala ji na spawn!");
+                        }
                     }
                 } else {
-                    if (statusLabel != null) statusLabel.setText("Žádná soupeřova figurka není v dosahu Přesné mušky (do 6 políček před tebou).");
+                    if (statusLabel != null) statusLabel.setText("Žádná soupeřova figurka není v dosahu Elfího šípu (do 6 políček před tebou).");
                 }
                 break;
         }
     }
 
-    private Pawn findTargetForLovkyne(Player lovkynePlayer) {
-        for (Pawn myPawn : lovkynePlayer.getPawnsOnBoard()) {
+    private Pawn findTargetForElfka(Player elfkaPlayer) {
+        for (Pawn myPawn : elfkaPlayer.getPawnsOnBoard()) {
             for (Player other : players) {
-                if (other == lovkynePlayer) continue;
+                if (other == elfkaPlayer) continue;
                 for (Pawn enemyPawn : other.getPawnsOnBoard()) {
                     int dist = (enemyPawn.getCurrentTileIndex() - myPawn.getCurrentTileIndex() + BoardPath.getPathLength()) % BoardPath.getPathLength();
                     if (dist >= 1 && dist <= 6) {
@@ -546,7 +553,7 @@ public class GameController {
 
                     updatePawnPosition(myPawn);
                     updatePawnPosition(targetPawn);
-                    if (statusLabel != null) statusLabel.setText("Prohodil jsi pozici figurky s soupeřem!");
+                    if (statusLabel != null) statusLabel.setText("Prohodil jsi pozici figurky se soupeřem!");
                 }
                 break;
 
@@ -563,7 +570,7 @@ public class GameController {
             case CMAJZ:
                 Player victim = null;
                 for (Player other : players) {
-                    if (other != p && !other.getInventory().isEmpty()) {
+                    if (other != p && !other.getInventory().isEmpty() && other.getHeroClass() != HeroClass.KRALOVNA) {
                         victim = other;
                         break;
                     }
@@ -573,6 +580,8 @@ public class GameController {
                     p.addItem(stolen);
                     updateInventoryUI();
                     if (statusLabel != null) statusLabel.setText("Čmajzl jsi předmět " + stolen.getName() + " Hráči " + victim.getId() + "!");
+                } else {
+                    if (statusLabel != null) statusLabel.setText("Není komu ukrást předmět (Královna je navíc imunní).");
                 }
                 break;
         }
