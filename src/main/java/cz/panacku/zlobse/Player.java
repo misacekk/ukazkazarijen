@@ -25,8 +25,13 @@ public class Player {
     }
 
     public int getId() { return id; }
+    public int getSlotIndex() { return id - 1; }
     public HeroClass getHeroClass() { return heroClass; }
     public List<Pawn> getPawns() { return pawns; }
+
+    public int getStartTileIndex() {
+        return BoardPath.getStartTileIndex(getSlotIndex());
+    }
 
     public int getScore() {
         int count = 0;
@@ -36,33 +41,22 @@ public class Player {
         return count;
     }
 
-    public boolean isFinished() {
-        return getScore() >= TARGET_SCORE;
-    }
-
+    public boolean isFinished() { return getScore() >= TARGET_SCORE; }
     public boolean hasRolledThisTurn() { return hasRolledThisTurn; }
     public void setHasRolledThisTurn(boolean hasRolledThisTurn) { this.hasRolledThisTurn = hasRolledThisTurn; }
-
     public boolean hasUsedAbility() { return abilityUsed; }
     public void setAbilityUsed(boolean abilityUsed) { this.abilityUsed = abilityUsed; }
-
     public boolean isDoubleRollActive() { return doubleRollActive; }
     public void setDoubleRollActive(boolean doubleRollActive) { this.doubleRollActive = doubleRollActive; }
-
     public boolean isSkipped() { return skipped; }
     public void setSkipped(boolean skipped) { this.skipped = skipped; }
-
     public List<Item> getInventory() { return inventory; }
 
     public void addItem(Item item) {
-        if (inventory.size() < 3) {
-            inventory.add(item);
-        }
+        if (inventory.size() < 3) inventory.add(item);
     }
 
-    public void resetTurn() {
-        this.hasRolledThisTurn = false;
-    }
+    public void resetTurn() { this.hasRolledThisTurn = false; }
 
     public Pawn getPawnInHouse() {
         for (Pawn p : pawns) {
@@ -74,9 +68,7 @@ public class Player {
     public List<Pawn> getPawnsOnBoard() {
         List<Pawn> list = new ArrayList<>();
         for (Pawn p : pawns) {
-            if (!p.isInHouse() && !p.isInFinish()) {
-                list.add(p);
-            }
+            if (!p.isInHouse() && !p.isInFinish()) list.add(p);
         }
         return list;
     }

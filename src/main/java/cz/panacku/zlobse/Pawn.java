@@ -11,7 +11,7 @@ public class Pawn {
     public Pawn(int id, Player owner) {
         this.id = id;
         this.owner = owner;
-        this.currentTileIndex = owner.getHeroClass().getStartIndex();
+        this.currentTileIndex = owner.getStartTileIndex();
     }
 
     public int getId() { return id; }
@@ -37,7 +37,7 @@ public class Pawn {
     public void resetToSpawn() {
         this.inHouse = true;
         this.inFinish = false;
-        this.currentTileIndex = owner.getHeroClass().getStartIndex();
+        this.currentTileIndex = owner.getStartTileIndex();
         this.totalStepsMoved = 0;
     }
 
