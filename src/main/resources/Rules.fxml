@@ -127,7 +127,7 @@
                                                 <Label text="Elfka" style="-fx-text-fill: #3742fa; -fx-font-size: 17px; -fx-font-weight: bold;" />
                                                 <Label text="Typ: Aktivní" style="-fx-text-fill: #8a8a93; -fx-font-size: 12px;" />
                                                 <Label text="Elfí šíp" style="-fx-text-fill: #FFD700; -fx-font-size: 13px; -fx-font-weight: bold;" />
-                                                <Label text="Odstřelí soupeřovu figurku do 6 polí před sebou." textAlignment="CENTER" wrapText="true" style="-fx-text-fill: #d1d1d6; -fx-font-size: 12px;" />
+                                                <Label text="Odrazí pronásledovatele (až 3 pole za sebou) o 3 pole zpět." textAlignment="CENTER" wrapText="true" style="-fx-text-fill: #d1d1d6; -fx-font-size: 12px;" />
                                             </children>
                                         </VBox>
 
@@ -140,7 +140,7 @@
                                                 <Label text="Královna" style="-fx-text-fill: #e84393; -fx-font-size: 17px; -fx-font-weight: bold;" />
                                                 <Label text="Typ: Pasivní" style="-fx-text-fill: #8a8a93; -fx-font-size: 12px;" />
                                                 <Label text="Královská imunita" style="-fx-text-fill: #FFD700; -fx-font-size: 13px; -fx-font-weight: bold;" />
-                                                <Label text="Imunní vůči škodlivým schopnostem a Čmajzu." textAlignment="CENTER" wrapText="true" style="-fx-text-fill: #d1d1d6; -fx-font-size: 12px;" />
+                                                <Label text="Imunní vůči schopnostem hrdinů (předměty fungují)." textAlignment="CENTER" wrapText="true" style="-fx-text-fill: #d1d1d6; -fx-font-size: 12px;" />
                                             </children>
                                         </VBox>
                                     </children>
