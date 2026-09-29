@@ -40,7 +40,7 @@ public class GameController {
     private Pane tokenLayer;
     private ImageView diceImageView;
 
-    private int targetPlayerCount = 2;
+    private int targetPlayerCount = 4;
     private final List<Player> players = new ArrayList<>();
     private final Map<Pawn, ImageView> pawnTokenMap = new HashMap<>();
     private int currentPlayerIndex = 0;
@@ -51,6 +51,7 @@ public class GameController {
     private int lastRolledDiceValue = 0;
 
     private final Random random = new Random();
+    private int clickCounter = 0;
 
     private static final double BOARD_WIDTH = 1400.0;
     private static final double BOARD_HEIGHT = 800.0;
@@ -75,6 +76,11 @@ public class GameController {
 
     private void startHeroSelection(int count) {
         this.targetPlayerCount = count;
+        BoardPath.setPlayerCount(count);
+
+        // Přenačtení hrací plochy (board2.png pro 3 hráče, board1.png pro ostatní)
+        setupBoardUI();
+
         if (modeSelectionBox != null) modeSelectionBox.setVisible(false);
         if (heroSelectionBox != null) heroSelectionBox.setVisible(true);
         updateHeroSelectionUI();
@@ -353,6 +359,7 @@ public class GameController {
             case CARODEJNICE:
                 p.setDoubleRollActive(true);
                 p.setAbilityUsed(true);
+                if (statusLabel != null) statusLabel.setText("Čarodějnice aktivovala Dvojitý hod!");
                 break;
             case BANDITA:
                 int nextIdx = (currentPlayerIndex + 1) % players.size();
@@ -361,14 +368,24 @@ public class GameController {
                     victim.setSkipped(true);
                     p.setHasRolledThisTurn(false);
                     p.setAbilityUsed(true);
+                    if (statusLabel != null) statusLabel.setText("Bandita ukradl tah Hráči " + victim.getId() + "!");
+                } else if (statusLabel != null) {
+                    statusLabel.setText("Královna je imunní vůči schopnosti Bandity!");
                 }
                 break;
             case ELFKA:
                 Pawn targetEnemyPawn = findTargetForElfka(p);
                 if (targetEnemyPawn != null && targetEnemyPawn.getOwner().getHeroClass() != HeroClass.KRALOVNA) {
-                    targetEnemyPawn.resetToSpawn();
+                    int newTile = (targetEnemyPawn.getCurrentTileIndex() - 3 + BoardPath.getPathLength()) % BoardPath.getPathLength();
+                    targetEnemyPawn.stepToTile(newTile);
+                    targetEnemyPawn.setTotalStepsMoved(Math.max(0, targetEnemyPawn.getTotalStepsMoved() - 3));
                     updatePawnPosition(targetEnemyPawn);
                     p.setAbilityUsed(true);
+                    if (statusLabel != null) {
+                        statusLabel.setText("Elfka odrazila figurku Hráče " + targetEnemyPawn.getOwner().getId() + " o 3 pole zpět!");
+                    }
+                } else if (statusLabel != null) {
+                    statusLabel.setText("V dosahu 1–3 polí za tvou figurkou není žádný platný soupeř!");
                 }
                 break;
             default:
@@ -381,8 +398,10 @@ public class GameController {
             for (Player other : players) {
                 if (other == elfkaPlayer) continue;
                 for (Pawn enemyPawn : other.getPawnsOnBoard()) {
-                    int dist = (enemyPawn.getCurrentTileIndex() - myPawn.getCurrentTileIndex() + BoardPath.getPathLength()) % BoardPath.getPathLength();
-                    if (dist >= 1 && dist <= 6) return enemyPawn;
+                    int distBehind = (myPawn.getCurrentTileIndex() - enemyPawn.getCurrentTileIndex() + BoardPath.getPathLength()) % BoardPath.getPathLength();
+                    if (distBehind >= 1 && distBehind <= 3) {
+                        return enemyPawn;
+                    }
                 }
             }
         }
@@ -474,7 +493,6 @@ public class GameController {
         }
     }
 
-    // 🎯 AKTIVACE EFEKTŮ PŘEDMĚTŮ
     private boolean applyItemEffect(Item item) {
         Player p = getCurrentPlayer();
 
@@ -506,7 +524,6 @@ public class GameController {
                     return false;
                 }
 
-                // Prohození pozic
                 int myTile = myPawn.getCurrentTileIndex();
                 int mySteps = myPawn.getTotalStepsMoved();
 
@@ -586,8 +603,14 @@ public class GameController {
         if (boardContainer == null) return;
         boardContainer.getChildren().clear();
 
+        // 3 hráči -> board2.png, jinak board1.png
+        String imageName = (targetPlayerCount == 3) ? "/images/board2.png" : "/images/board1.png";
+        InputStream is = getClass().getResourceAsStream(imageName);
+        if (is == null) {
+            is = getClass().getResourceAsStream("/images/board1.png"); // Záloha
+        }
+
         ImageView boardImage = new ImageView();
-        InputStream is = getClass().getResourceAsStream("/images/board1.png");
         if (is != null) boardImage.setImage(new Image(is));
         boardImage.setFitWidth(BOARD_WIDTH);
         boardImage.setFitHeight(BOARD_HEIGHT);
@@ -596,7 +619,11 @@ public class GameController {
         tokenLayer.setPrefSize(BOARD_WIDTH, BOARD_HEIGHT);
 
         tokenLayer.setOnMouseClicked(event -> {
-            System.out.println("PATH.add(new TilePosition(" + event.getX() + ", " + event.getY() + "));");
+            clickCounter++;
+            double x = Math.round(event.getX() * 10.0) / 10.0;
+            double y = Math.round(event.getY() * 10.0) / 10.0;
+            System.out.println("// Klik č. " + clickCounter);
+            System.out.println("PATH.add(new TilePosition(" + x + ", " + y + "));");
         });
 
         diceImageView = new ImageView();
