@@ -51,7 +51,6 @@ public class GameController {
     private int lastRolledDiceValue = 0;
 
     private final Random random = new Random();
-    private int clickCounter = 0;
 
     private static final double BOARD_WIDTH = 1400.0;
     private static final double BOARD_HEIGHT = 800.0;
@@ -78,7 +77,7 @@ public class GameController {
         this.targetPlayerCount = count;
         BoardPath.setPlayerCount(count);
 
-        // Přenačtení hrací plochy (board2.png pro 3 hráče, board1.png pro ostatní)
+        // Načtení hrací plochy (board3.png pro 2 hráče, board2.png pro 3, board1.png pro 4)
         setupBoardUI();
 
         if (modeSelectionBox != null) modeSelectionBox.setVisible(false);
@@ -603,8 +602,16 @@ public class GameController {
         if (boardContainer == null) return;
         boardContainer.getChildren().clear();
 
-        // 3 hráči -> board2.png, jinak board1.png
-        String imageName = (targetPlayerCount == 3) ? "/images/board2.png" : "/images/board1.png";
+        // Výběr správného obrázku desky podle zvoleného počtu hráčů
+        String imageName;
+        if (targetPlayerCount == 2) {
+            imageName = "/images/board3.png";
+        } else if (targetPlayerCount == 3) {
+            imageName = "/images/board2.png";
+        } else {
+            imageName = "/images/board1.png";
+        }
+
         InputStream is = getClass().getResourceAsStream(imageName);
         if (is == null) {
             is = getClass().getResourceAsStream("/images/board1.png"); // Záloha
@@ -617,14 +624,6 @@ public class GameController {
 
         tokenLayer = new Pane();
         tokenLayer.setPrefSize(BOARD_WIDTH, BOARD_HEIGHT);
-
-        tokenLayer.setOnMouseClicked(event -> {
-            clickCounter++;
-            double x = Math.round(event.getX() * 10.0) / 10.0;
-            double y = Math.round(event.getY() * 10.0) / 10.0;
-            System.out.println("// Klik č. " + clickCounter);
-            System.out.println("PATH.add(new TilePosition(" + x + ", " + y + "));");
-        });
 
         diceImageView = new ImageView();
         diceImageView.setFitWidth(DICE_SIZE);
