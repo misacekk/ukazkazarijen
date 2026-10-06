@@ -9,6 +9,11 @@ public class TilePosition {
         this.y = y;
     }
 
-    public double getX() { return x; }
-    public double getY() { return y; }
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
+    }
 }

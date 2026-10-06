@@ -11,14 +11,12 @@
 
 <StackPane prefHeight="650.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cz.panacku.zlobse.MenuController">
     <children>
-        <!-- Obrázek na pozadí (deska) -->
         <ImageView fitHeight="1000.0" fitWidth="1800.0" pickOnBounds="true">
             <image>
                 <Image url="@images/menu-bg.png" />
             </image>
         </ImageView>
 
-        <!-- Tmavý průhledný překryv pro dobrou čitelnost textu -->
         <VBox alignment="CENTER" spacing="25.0" style="-fx-background-color: rgba(18, 18, 20, 0.75);">
             <children>
                 <VBox alignment="CENTER" spacing="5.0">

@@ -4,6 +4,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -30,7 +31,8 @@ public class GameController {
     @FXML private Button btnNekromant, btnElfka, btnKralovna;
 
     @FXML private VBox gameContent;
-    @FXML private StackPane boardContainer;
+    @FXML private Pane boardContainer;
+    @FXML private VBox playersContainer;
     @FXML private VBox itemSelectionOverlay;
     @FXML private HBox itemCardsContainer;
     @FXML private VBox bottomBar;
@@ -52,7 +54,7 @@ public class GameController {
 
     private final Random random = new Random();
 
-    private static final double BOARD_WIDTH = 1400.0;
+    private static final double BOARD_WIDTH = 800.0;
     private static final double BOARD_HEIGHT = 800.0;
     private static final double TOKEN_SIZE = 45.0;
     private static final double DICE_SIZE = 100.0;
@@ -77,7 +79,6 @@ public class GameController {
         this.targetPlayerCount = count;
         BoardPath.setPlayerCount(count);
 
-        // Načtení hrací plochy (board3.png pro 2 hráče, board2.png pro 3, board1.png pro 4)
         setupBoardUI();
 
         if (modeSelectionBox != null) modeSelectionBox.setVisible(false);
@@ -120,6 +121,7 @@ public class GameController {
             if (selectionContainer != null) selectionContainer.setVisible(false);
             if (bottomBar != null) bottomBar.setVisible(true);
             currentPlayerIndex = 0;
+            updatePlayersPanel();
             startTurn();
         }
     }
@@ -153,9 +155,10 @@ public class GameController {
         movablePawnsCurrentTurn.clear();
         canSpawnCurrentTurn = false;
         updateInventoryUI();
+        updatePlayersPanel();
 
         if (statusLabel != null) {
-            statusLabel.setText("Na tahu je Hráč " + p.getId() + " (" + p.getHeroClass().getName() + ") | Domečky: " + p.getScore() + "/" + Player.TARGET_SCORE);
+            statusLabel.setText("Na tahu je Hráč " + p.getId() + " (" + p.getHeroClass().getName() + ") | Cíl: " + p.getScore() + "/" + Player.TARGET_SCORE);
         }
     }
 
@@ -223,7 +226,7 @@ public class GameController {
             } else {
                 waitingForPawnSelection = true;
                 if (statusLabel != null) {
-                    statusLabel.setText("Hodil jsi " + diceValue + "! Klikni na figurku na spawnu nebo na desce.");
+                    statusLabel.setText("Hodil jsi " + diceValue + "! Klikni na figurku v pravém panelu nebo na desce.");
                 }
             }
         });
@@ -253,8 +256,11 @@ public class GameController {
     private void executeSpawn(Pawn pawn, int diceValue) {
         Player p = pawn.getOwner();
         pawn.setInHouse(false);
+        pawn.stepToTile(p.getStartTileIndex());
+        pawn.setTotalStepsMoved(0);
         updatePawnPosition(pawn);
         checkKickout(pawn);
+        updatePlayersPanel();
 
         if (statusLabel != null) {
             statusLabel.setText("Hráč " + p.getId() + " nasadil novou figurku! Hází znovu.");
@@ -269,6 +275,7 @@ public class GameController {
             if (diceValue == 1) {
                 pawn.setInFinish(true);
                 updatePawnPosition(pawn);
+                updatePlayersPanel();
 
                 if (p.isFinished()) {
                     zobrazitVitezneOkno(p);
@@ -291,6 +298,7 @@ public class GameController {
         animatePawnMovement(pawn, actualSteps, () -> {
             checkKickout(pawn);
             checkItemPickUp(pawn);
+            updatePlayersPanel();
 
             if (diceValue == 6) {
                 p.setHasRolledThisTurn(false);
@@ -428,13 +436,15 @@ public class GameController {
         ImageView token = pawnTokenMap.get(pawn);
         if (token == null) return;
 
+        if (pawn.isInHouse()) {
+            token.setVisible(false);
+            return;
+        }
+
+        token.setVisible(true);
         double offset = TOKEN_SIZE / 2.0;
 
-        if (pawn.isInHouse()) {
-            TilePosition spawnPos = BoardPath.getSpawnPosition(pawn.getOwner().getSlotIndex(), pawn.getId());
-            token.setLayoutX(spawnPos.getX() - offset);
-            token.setLayoutY(spawnPos.getY() - offset);
-        } else if (pawn.isInFinish()) {
+        if (pawn.isInFinish()) {
             TilePosition finishPos = BoardPath.getFinishPosition(pawn.getOwner().getSlotIndex(), pawn.getId());
             token.setLayoutX(finishPos.getX() - offset);
             token.setLayoutY(finishPos.getY() - offset);
@@ -602,19 +612,18 @@ public class GameController {
         if (boardContainer == null) return;
         boardContainer.getChildren().clear();
 
-        // Výběr správného obrázku desky podle zvoleného počtu hráčů
         String imageName;
         if (targetPlayerCount == 2) {
-            imageName = "/images/board3.png";
+            imageName = "/images/deskapro2.png";
         } else if (targetPlayerCount == 3) {
-            imageName = "/images/board2.png";
+            imageName = "/images/deskapro3.png";
         } else {
-            imageName = "/images/board1.png";
+            imageName = "/images/deskapro4.png";
         }
 
         InputStream is = getClass().getResourceAsStream(imageName);
         if (is == null) {
-            is = getClass().getResourceAsStream("/images/board1.png"); // Záloha
+            is = getClass().getResourceAsStream("/images/deskapro4.png");
         }
 
         ImageView boardImage = new ImageView();
@@ -624,6 +633,7 @@ public class GameController {
 
         tokenLayer = new Pane();
         tokenLayer.setPrefSize(BOARD_WIDTH, BOARD_HEIGHT);
+        tokenLayer.setMaxSize(BOARD_WIDTH, BOARD_HEIGHT);
 
         diceImageView = new ImageView();
         diceImageView.setFitWidth(DICE_SIZE);
@@ -631,8 +641,80 @@ public class GameController {
         diceImageView.setLayoutX((BOARD_WIDTH - DICE_SIZE) / 2.0);
         diceImageView.setLayoutY((BOARD_HEIGHT - DICE_SIZE) / 2.0);
 
+        setDiceImage(1);
+
+        diceImageView.setCursor(Cursor.HAND);
+        diceImageView.setOnMouseClicked(e -> hoditKostkou());
+
         tokenLayer.getChildren().add(diceImageView);
         boardContainer.getChildren().addAll(boardImage, tokenLayer);
+
+        boardContainer.setOnMouseClicked(event -> {
+            double x = Math.round(event.getX() * 10.0) / 10.0;
+            double y = Math.round(event.getY() * 10.0) / 10.0;
+
+            System.out.println("PATH.add(new TilePosition(" + x + ", " + y + "));");
+        });
+    }
+
+    private void updatePlayersPanel() {
+        if (playersContainer == null) return;
+        playersContainer.getChildren().clear();
+
+        Label title = new Label("HRÁČI A FIGURKY");
+        title.setStyle("-fx-text-fill: #FFD700; -fx-font-size: 18px; -fx-font-weight: bold;");
+        playersContainer.getChildren().add(title);
+
+        for (int i = 0; i < players.size(); i++) {
+            Player p = players.get(i);
+            boolean isCurrent = (i == currentPlayerIndex);
+
+            VBox playerBox = new VBox(8);
+
+            String borderStyle = isCurrent
+                    ? "-fx-background-color: #2c2c2e; -fx-border-color: #FFD700; -fx-border-width: 2px; -fx-border-radius: 6px; -fx-background-radius: 6px; -fx-padding: 10px;"
+                    : "-fx-background-color: #242426; -fx-border-color: #3a3a3c; -fx-border-width: 1px; -fx-border-radius: 6px; -fx-background-radius: 6px; -fx-padding: 10px;";
+            playerBox.setStyle(borderStyle);
+
+            HBox row = new HBox(12);
+            row.setAlignment(Pos.CENTER_LEFT);
+
+            Label playerLabel = new Label("Hráč " + p.getId() + ":");
+            playerLabel.setStyle("-fx-text-fill: " + (isCurrent ? "#FFD700" : "#FFFFFF") + "; -fx-font-weight: bold; -fx-font-size: 13px;");
+
+            HBox pawnsBox = new HBox(6);
+            pawnsBox.setAlignment(Pos.CENTER_LEFT);
+
+            for (Pawn pawn : p.getPawns()) {
+                ImageView pawnIcon = new ImageView();
+                pawnIcon.setFitWidth(28);
+                pawnIcon.setFitHeight(28);
+                pawnIcon.setPreserveRatio(true);
+
+                InputStream is = getClass().getResourceAsStream("/images/" + p.getHeroClass().getImageFileName());
+                if (is != null) {
+                    pawnIcon.setImage(new Image(is));
+                }
+
+                if (pawn.isInFinish()) {
+                    pawnIcon.setOpacity(1.0);
+                } else if (pawn.isInHouse()) {
+                    pawnIcon.setOpacity(0.4);
+                } else {
+                    pawnIcon.setOpacity(1.0);
+                }
+
+                pawnIcon.setCursor(Cursor.HAND);
+                Pawn currentPawn = pawn;
+                pawnIcon.setOnMouseClicked(e -> handlePawnClick(currentPawn));
+
+                pawnsBox.getChildren().add(pawnIcon);
+            }
+
+            row.getChildren().addAll(playerLabel, pawnsBox);
+            playerBox.getChildren().add(row);
+            playersContainer.getChildren().add(playerBox);
+        }
     }
 
     private void updateInventoryUI() {
