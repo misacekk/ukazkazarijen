@@ -1,5 +1,9 @@
 package cz.panacku.zlobse;
 
+/**
+ * Reprezentuje jednotlivou figurku hráče na hrací desce.
+ * Sleduje její pozici, stav v domečku a odehrané kroky.
+ */
 public class Pawn {
     private final int id;
     private final Player owner;
@@ -14,18 +18,25 @@ public class Pawn {
         this.currentTileIndex = owner.getStartTileIndex();
     }
 
+    // Gettery základních vlastností
     public int getId() { return id; }
     public Player getOwner() { return owner; }
     public int getCurrentTileIndex() { return currentTileIndex; }
 
+    /**
+     * Posune figurku na zadaný index políčka na desce s ošetřením celkového okruhu.
+     */
     public void stepToTile(int index) {
-        this.currentTileIndex = (index % BoardPath.getPathLength() + BoardPath.getPathLength()) % BoardPath.getPathLength();
+        int length = BoardPath.getPathLength();
+        this.currentTileIndex = (index % length + length) % length;
     }
 
+    // Správa celkového počtu ujetých kroků
     public int getTotalStepsMoved() { return totalStepsMoved; }
     public void setTotalStepsMoved(int totalStepsMoved) { this.totalStepsMoved = totalStepsMoved; }
     public void addSteps(int steps) { this.totalStepsMoved += steps; }
 
+    // Správa stavu v domovském spawnu
     public boolean isInHouse() { return inHouse; }
     public void setInHouse(boolean inHouse) {
         this.inHouse = inHouse;
@@ -34,6 +45,9 @@ public class Pawn {
         }
     }
 
+    /**
+     * Resetuje stav figurky zpět do počátečního spawnu (při vyhození).
+     */
     public void resetToSpawn() {
         this.inHouse = true;
         this.inFinish = false;
@@ -41,13 +55,20 @@ public class Pawn {
         this.totalStepsMoved = 0;
     }
 
+    // Správa cílového domečku
     public boolean isInFinish() { return inFinish; }
     public void setInFinish(boolean inFinish) { this.inFinish = inFinish; }
 
+    /**
+     * Kontroluje, zda je figurka přesně před vstupem do cílového domečku.
+     */
     public boolean isAtEntranceTile() {
         return !inHouse && !inFinish && totalStepsMoved >= BoardPath.getPathLength();
     }
 
+    /**
+     * Vrací zbývající počet kroků do vstupu do domečku.
+     */
     public int getStepsToEntrance() {
         return Math.max(0, BoardPath.getPathLength() - totalStepsMoved);
     }

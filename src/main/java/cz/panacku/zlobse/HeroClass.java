@@ -1,5 +1,9 @@
 package cz.panacku.zlobse;
 
+/**
+ * Výčtový typ hrdinů dostupných ve hře.
+ * Obsahuje uživatelské jméno a název souboru s obrázkem figurek.
+ */
 public enum HeroClass {
     NEKROMANT("Nekromant", "nekromant.png"),
     CARODEJNICE("Čarodějnice", "witch.png"),
@@ -16,6 +20,11 @@ public enum HeroClass {
         this.imageFileName = imageFileName;
     }
 
-    public String getName() { return name; }
-    public String getImageFileName() { return imageFileName; }
+    public String getName() {
+        return name;
+    }
+
+    public String getImageFileName() {
+        return imageFileName;
+    }
 }

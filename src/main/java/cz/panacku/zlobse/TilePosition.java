@@ -1,5 +1,8 @@
 package cz.panacku.zlobse;
 
+/**
+ * Přepravka pro 2D souřadnice (X, Y) na hrací desce.
+ */
 public class TilePosition {
     private final double x;
     private final double y;

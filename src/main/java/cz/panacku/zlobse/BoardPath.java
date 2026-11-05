@@ -3,20 +3,33 @@ package cz.panacku.zlobse;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Třída uchovávající souřadnice herních políček, spawnů a cílových domků
+ * pro různé počty hráčů (2, 3 nebo 4 hráči).
+ */
 public class BoardPath {
 
     private static int activePlayerCount = 4;
 
+    // ==========================================
+    // Cesty a pozice pro režim 2 hráčů
+    // ==========================================
     private static final List<TilePosition> PATH_2P = new ArrayList<>();
     private static final List<List<TilePosition>> SPAWNS_2P = new ArrayList<>();
     private static final List<List<TilePosition>> FINISHES_2P = new ArrayList<>();
     private static final int[] PLAYER_START_INDICES_2P = {0, 11};
 
+    // ==========================================
+    // Cesty a pozice pro režim 3 hráčů
+    // ==========================================
     private static final List<TilePosition> PATH_3P = new ArrayList<>();
     private static final List<List<TilePosition>> SPAWNS_3P = new ArrayList<>();
     private static final List<List<TilePosition>> FINISHES_3P = new ArrayList<>();
     private static final int[] PLAYER_START_INDICES_3P = {0, 10, 20};
 
+    // ==========================================
+    // Cesty a pozice pro režim 4 hráčů
+    // ==========================================
     private static final List<TilePosition> PATH_4P = new ArrayList<>();
     private static final List<List<TilePosition>> SPAWNS_4P = new ArrayList<>();
     private static final List<List<TilePosition>> FINISHES_4P = new ArrayList<>();
@@ -28,6 +41,9 @@ public class BoardPath {
         init4PlayerPath();
     }
 
+    /**
+     * Inicializace souřadnic pro variantu se 2 hráči.
+     */
     private static void init2PlayerPath() {
         PATH_2P.add(new TilePosition(409.0, 103.0));
         PATH_2P.add(new TilePosition(486.0, 132.0));
@@ -73,6 +89,9 @@ public class BoardPath {
         FINISHES_2P.addAll(List.of(finishP1, finishP2));
     }
 
+    /**
+     * Inicializace souřadnic pro variantu se 3 hráči.
+     */
     private static void init3PlayerPath() {
         PATH_3P.add(new TilePosition(399.0, 36.0));
         PATH_3P.add(new TilePosition(477.0, 64.0));
@@ -134,6 +153,9 @@ public class BoardPath {
         FINISHES_3P.addAll(List.of(finishP1, finishP2, finishP3));
     }
 
+    /**
+     * Inicializace souřadnic pro variantu se 4 hráči.
+     */
     private static void init4PlayerPath() {
         PATH_4P.add(new TilePosition(46.0, 47.0));
         PATH_4P.add(new TilePosition(114.0, 47.0));
@@ -201,6 +223,10 @@ public class BoardPath {
         FINISHES_4P.addAll(List.of(finishP1, finishP2, finishP3, finishP4));
     }
 
+    // ==========================================
+    // Veřejné metody pro zjišťování stavu
+    // ==========================================
+
     public static void setPlayerCount(int count) {
         activePlayerCount = count;
     }
@@ -219,27 +245,42 @@ public class BoardPath {
         return PATH_4P;
     }
 
+    /**
+     * Vrací souřadnice políčka na základě indexu (s ošetřením přetečení okruhu).
+     */
     public static TilePosition getTile(int index) {
         List<TilePosition> path = getActivePath();
         int safeIndex = (index % path.size() + path.size()) % path.size();
         return path.get(safeIndex);
     }
 
+    /**
+     * Vrací index startovního políčka pro daného hráče.
+     */
     public static int getStartTileIndex(int playerSlot) {
         int[] indices = is2PlayerReady() ? PLAYER_START_INDICES_2P : (is3PlayerReady() ? PLAYER_START_INDICES_3P : PLAYER_START_INDICES_4P);
         return indices[playerSlot % indices.length];
     }
 
+    /**
+     * Vrací pozici v domovském spawnu pro daného hráče a konkrétní figurku.
+     */
     public static TilePosition getSpawnPosition(int playerSlot, int pawnId) {
         List<List<TilePosition>> spawns = is2PlayerReady() ? SPAWNS_2P : (is3PlayerReady() ? SPAWNS_3P : SPAWNS_4P);
         return spawns.get(playerSlot % spawns.size()).get(pawnId % 4);
     }
 
+    /**
+     * Vrací pozici v cílovém domečku pro daného hráče a konkrétní figurku.
+     */
     public static TilePosition getFinishPosition(int playerSlot, int pawnId) {
         List<List<TilePosition>> finishes = is2PlayerReady() ? FINISHES_2P : (is3PlayerReady() ? FINISHES_3P : FINISHES_4P);
         return finishes.get(playerSlot % finishes.size()).get(pawnId % 4);
     }
 
+    /**
+     * Zjišťuje, zda je dané políčko políčkem s předmětem.
+     */
     public static boolean isItemTile(int index) {
         List<TilePosition> path = getActivePath();
         int safeIndex = (index % path.size() + path.size()) % path.size();
@@ -253,6 +294,9 @@ public class BoardPath {
         }
     }
 
+    /**
+     * Vrací celkovou délku hlavní dráhy pro aktuální režim.
+     */
     public static int getPathLength() {
         return getActivePath().size();
     }

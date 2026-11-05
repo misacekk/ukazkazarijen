@@ -1,28 +1,32 @@
 package cz.panacku.zlobse;
 
-import java.util.Random;
-
+/**
+ * Výčtový typ speciálních předmětů, které mohou hráči získat na desce a použít z inventáře.
+ */
 public enum Item {
-    TELEPORT("Teleport", "Ihned prohodí pozici tvé figurky s nejbližší figurkou soupeře na herním plánu.", "teleport.png"),
-    STASTNA_SEDMA("Šťastná sedma", "V tomto kole nehážíš kostkou, ale posouváš se o garantovaných 7 políček dopředu.", "stastna_sedma.png"),
-    CMAJZ("Čmajz", "Umožní vybrat jednoho protihráče a ukrást mu náhodný předmět přímo do tvého hotbaru.", "cmajz.png");
+    TELEPORT("Teleport", "teleport.png", "Prohodí pozici s nejbližším soupeřem."),
+    STASTNA_SEDMA("Šťastná sedma", "stastna_sedma.png", "Posune figurku o 7 polí dopředu."),
+    CMAJZ("Čmajz", "cmajz.png", "Ukradne náhodný předmět protihráči.");
 
     private final String name;
-    private final String description;
     private final String imageFileName;
+    private final String description;
 
-    Item(String name, String description, String imageFileName) {
+    Item(String name, String imageFileName, String description) {
         this.name = name;
-        this.description = description;
         this.imageFileName = imageFileName;
+        this.description = description;
     }
 
-    public String getName() { return name; }
-    public String getDescription() { return description; }
-    public String getImageFileName() { return imageFileName; }
+    public String getName() {
+        return name;
+    }
 
-    public static Item getRandomItem() {
-        Item[] items = values();
-        return items[new Random().nextInt(items.length)];
+    public String getImageFileName() {
+        return imageFileName;
+    }
+
+    public String getDescription() {
+        return description;
     }
 }
