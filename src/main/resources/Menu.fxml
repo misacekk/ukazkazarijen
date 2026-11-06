@@ -46,16 +46,16 @@
                 <!-- Hlavní navigační tlačítka -->
                 <VBox alignment="CENTER" spacing="15.0" maxWidth="300.0">
                     <children>
-                        <Button text="🎮  Hrát hru" onAction="#spustitHru" prefWidth="320.0" prefHeight="55.0"
-                                style="-fx-background-color: #ff4757; -fx-text-fill: white; -fx-font-size: 17px; -fx-font-weight: bold; -fx-background-radius: 10px; -fx-cursor: hand;" />
+                        <Button text="Hrát hru" onAction="#spustitHru" prefWidth="320.0" prefHeight="55.0"
+                                style="-fx-background-color: #3a3b3c; -fx-text-fill: white; -fx-font-size: 17px; -fx-font-weight: bold; -fx-background-radius: 10px; -fx-cursor: hand;" />
 
-                        <Button text="✨  Schopnosti postav" onAction="#otevritLore" prefWidth="320.0" prefHeight="55.0"
-                                style="-fx-background-color: #2e86de; -fx-text-fill: white; -fx-font-size: 17px; -fx-font-weight: bold; -fx-background-radius: 10px; -fx-cursor: hand;" />
+                        <Button text="Schopnosti postav" onAction="#otevritLore" prefWidth="320.0" prefHeight="55.0"
+                                style="-fx-background-color: #3a3b3c; -fx-text-fill: white; -fx-font-size: 17px; -fx-font-weight: bold; -fx-background-radius: 10px; -fx-cursor: hand;" />
 
-                        <Button text="📜  Pravidla hry" onAction="#otvritPravidla" prefWidth="320.0" prefHeight="55.0"
-                                style="-fx-background-color: #2f3542; -fx-text-fill: white; -fx-font-size: 17px; -fx-font-weight: bold; -fx-background-radius: 10px; -fx-cursor: hand;" />
+                        <Button text="Pravidla hry" onAction="#otvritPravidla" prefWidth="320.0" prefHeight="55.0"
+                                style="-fx-background-color: #3a3b3c; -fx-text-fill: white; -fx-font-size: 17px; -fx-font-weight: bold; -fx-background-radius: 10px; -fx-cursor: hand;" />
 
-                        <Button text="🚪  Ukončit hru" onAction="#ukoncitAplikaci" prefWidth="320.0" prefHeight="55.0"
+                        <Button text="Ukončit hru" onAction="#ukoncitAplikaci" prefWidth="320.0" prefHeight="55.0"
                                 style="-fx-background-color: #3a3b3c; -fx-text-fill: white; -fx-font-size: 17px; -fx-font-weight: bold; -fx-background-radius: 10px; -fx-cursor: hand;" />
                     </children>
                 </VBox>

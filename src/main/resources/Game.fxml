@@ -93,12 +93,12 @@
                                        style="-fx-text-fill: #FFD700; -fx-font-size: 32px; -fx-font-weight: bold;" />
                                 <HBox alignment="CENTER" spacing="20.0">
                                     <children>
-                                        <Button text="⚔ 1 vs 1 (2 hráči)" onAction="#zvolitRezim2" prefWidth="220.0" prefHeight="60.0"
-                                                style="-fx-background-color: #2ed573; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
-                                        <Button text="🗡️ 1v1v1 (3 hráči)" onAction="#zvolitRezim3" prefWidth="220.0" prefHeight="60.0"
-                                                style="-fx-background-color: #ffa502; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
-                                        <Button text="👑 1v1v1v1 (4 hráči)" onAction="#zvolitRezim4" prefWidth="220.0" prefHeight="60.0"
-                                                style="-fx-background-color: #3742fa; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
+                                        <Button text="1v1" onAction="#zvolitRezim2" prefWidth="220.0" prefHeight="60.0"
+                                                style="-fx-background-color: #3a3b3c; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
+                                        <Button text="1v1v1" onAction="#zvolitRezim3" prefWidth="220.0" prefHeight="60.0"
+                                                style="-fx-background-color: #3a3b3c; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
+                                        <Button text="1v1v1v1" onAction="#zvolitRezim4" prefWidth="220.0" prefHeight="60.0"
+                                                style="-fx-background-color: #3a3b3c; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
                                     </children>
                                 </HBox>
                             </children>
@@ -113,24 +113,24 @@
                                 <!-- První řada hrdinů -->
                                 <HBox alignment="CENTER" spacing="20.0">
                                     <children>
-                                        <Button fx:id="btnRytir" text="⚔️ Rytíř" onAction="#zvolitRytire" prefWidth="180.0" prefHeight="60.0"
-                                                style="-fx-background-color: #ff4757; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
-                                        <Button fx:id="btnCarodejnice" text="🔮 Čarodějnice" onAction="#zvolitCarodejnici" prefWidth="180.0" prefHeight="60.0"
-                                                style="-fx-background-color: #1e90ff; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
-                                        <Button fx:id="btnBandita" text="🗡️ Bandita" onAction="#zvolitBanditu" prefWidth="180.0" prefHeight="60.0"
-                                                style="-fx-background-color: #2ed573; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
+                                        <Button fx:id="btnRytir" text="Rytíř" onAction="#zvolitRytire" prefWidth="180.0" prefHeight="60.0"
+                                                style="-fx-background-color: #3a3b3c; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
+                                        <Button fx:id="btnCarodejnice" text="Čarodějnice" onAction="#zvolitCarodejnici" prefWidth="180.0" prefHeight="60.0"
+                                                style="-fx-background-color: #3a3b3c; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
+                                        <Button fx:id="btnBandita" text="Bandita" onAction="#zvolitBanditu" prefWidth="180.0" prefHeight="60.0"
+                                                style="-fx-background-color: #3a3b3c; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
                                     </children>
                                 </HBox>
 
                                 <!-- Druhá řada hrdinů -->
                                 <HBox alignment="CENTER" spacing="20.0">
                                     <children>
-                                        <Button fx:id="btnNekromant" text="💀 Nekromant" onAction="#zvolitNekromanta" prefWidth="180.0" prefHeight="60.0"
-                                                style="-fx-background-color: #ffa502; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
-                                        <Button fx:id="btnElfka" text="🏹 Elfka" onAction="#zvolitElfku" prefWidth="180.0" prefHeight="60.0"
-                                                style="-fx-background-color: #70a1ff; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
-                                        <Button fx:id="btnKralovna" text="👑 Královna" onAction="#zvolitKralovnu" prefWidth="180.0" prefHeight="60.0"
-                                                style="-fx-background-color: #eccc68; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
+                                        <Button fx:id="btnNekromant" text="Nekromant" onAction="#zvolitNekromanta" prefWidth="180.0" prefHeight="60.0"
+                                                style="-fx-background-color: #3a3b3c; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
+                                        <Button fx:id="btnElfka" text="Elfka" onAction="#zvolitElfku" prefWidth="180.0" prefHeight="60.0"
+                                                style="-fx-background-color: #3a3b3c; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
+                                        <Button fx:id="btnKralovna" text="Královna" onAction="#zvolitKralovnu" prefWidth="180.0" prefHeight="60.0"
+                                                style="-fx-background-color: #3a3b3c; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 8px; -fx-cursor: hand;" />
                                     </children>
                                 </HBox>
                             </children>
@@ -185,8 +185,8 @@
                         <!-- Levý sloupeček: Hod kostkou -->
                         <HBox alignment="CENTER_LEFT" GridPane.columnIndex="0">
                             <children>
-                                <Button text="🎲 Hodit kostkou" onAction="#hoditKostkou" prefWidth="180.0" prefHeight="45.0"
-                                        style="-fx-background-color: #2ed573; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 6px; -fx-cursor: hand;" />
+                                <Button text="Hodit kostkou" onAction="#hoditKostkou" prefWidth="180.0" prefHeight="45.0"
+                                        style="-fx-background-color: #3a3b3c; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: bold; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 6px; -fx-cursor: hand;" />
                             </children>
                         </HBox>
 
@@ -202,16 +202,16 @@
                                 <StackPane prefHeight="50.0" prefWidth="50.0" style="-fx-background-color: #2c2c2e; -fx-border-color: #FFD700; -fx-border-width: 1px; -fx-border-radius: 4px;">
                                     <children><ImageView fx:id="itemSlot3" fitHeight="36.0" fitWidth="36.0" pickOnBounds="true" preserveRatio="true" /></children>
                                 </StackPane>
-                                <Button text="🧪 Použít předmět" onAction="#pouzitPredmet" prefHeight="45.0"
-                                        style="-fx-background-color: #3742fa; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 12px; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 6px; -fx-cursor: hand;" />
+                                <Button text="Použít předmět" onAction="#pouzitPredmet" prefHeight="45.0"
+                                        style="-fx-background-color: #3a3b3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 12px; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 6px; -fx-cursor: hand;" />
                             </children>
                         </HBox>
 
                         <!-- Pravý sloupeček: Aktivní schopnost hrdiny -->
                         <HBox alignment="CENTER_RIGHT" GridPane.columnIndex="2">
                             <children>
-                                <Button text="⚡ Použít schopnost" onAction="#pouzitSchopnost" prefHeight="45.0"
-                                        style="-fx-background-color: #ff4757; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 6px; -fx-cursor: hand;" />
+                                <Button text="Použít schopnost" onAction="#pouzitSchopnost" prefHeight="45.0"
+                                        style="-fx-background-color: #3a3b3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif; -fx-background-radius: 6px; -fx-cursor: hand;" />
                             </children>
                         </HBox>
                     </children>
