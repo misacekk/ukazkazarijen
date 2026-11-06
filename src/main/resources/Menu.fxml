@@ -2,7 +2,6 @@
 
 <!--
     Hlavní nabídka (Menu) aplikace "Panečku, zlob se!"
-    Obsahuje pozadí s ilustrací a navigaci do jednotlivých částí hry.
 -->
 
 <?import javafx.geometry.Insets?>
@@ -15,6 +14,7 @@
 <?import javafx.scene.text.Font?>
 
 <StackPane prefHeight="650.0" prefWidth="900.0"
+           stylesheets="@style.css"
            xmlns="http://javafx.com/javafx/17"
            xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="cz.panacku.zlobse.MenuController">
@@ -46,17 +46,10 @@
                 <!-- Hlavní navigační tlačítka -->
                 <VBox alignment="CENTER" spacing="15.0" maxWidth="300.0">
                     <children>
-                        <Button text="🎮  Hrát hru" onAction="#spustitHru" prefWidth="320.0" prefHeight="55.0"
-                                style="-fx-background-color: #ff4757; -fx-text-fill: white; -fx-font-size: 17px; -fx-font-weight: bold; -fx-background-radius: 10px; -fx-cursor: hand;" />
-
-                        <Button text="✨  Schopnosti postav" onAction="#otevritLore" prefWidth="320.0" prefHeight="55.0"
-                                style="-fx-background-color: #2e86de; -fx-text-fill: white; -fx-font-size: 17px; -fx-font-weight: bold; -fx-background-radius: 10px; -fx-cursor: hand;" />
-
-                        <Button text="📜  Pravidla hry" onAction="#otvritPravidla" prefWidth="320.0" prefHeight="55.0"
-                                style="-fx-background-color: #2f3542; -fx-text-fill: white; -fx-font-size: 17px; -fx-font-weight: bold; -fx-background-radius: 10px; -fx-cursor: hand;" />
-
-                        <Button text="🚪  Ukončit hru" onAction="#ukoncitAplikaci" prefWidth="320.0" prefHeight="55.0"
-                                style="-fx-background-color: #3a3b3c; -fx-text-fill: white; -fx-font-size: 17px; -fx-font-weight: bold; -fx-background-radius: 10px; -fx-cursor: hand;" />
+                        <Button text="Hrát hru" onAction="#spustitHru" prefWidth="280.0" prefHeight="55.0" styleClass="btn-red-fantasy" style="-fx-font-size: 17px;" />
+                        <Button text="Schopnosti postav" onAction="#otevritLore" prefWidth="280.0" prefHeight="55.0" styleClass="btn-red-fantasy" style="-fx-font-size: 17px;" />
+                        <Button text="Pravidla hry" onAction="#otvritPravidla" prefWidth="280.0" prefHeight="55.0" styleClass="btn-red-fantasy" style="-fx-font-size: 17px;" />
+                        <Button text="Ukončit hru" onAction="#ukoncitAplikaci" prefWidth="280.0" prefHeight="55.0" styleClass="btn-red-fantasy" style="-fx-font-size: 17px;" />
                     </children>
                 </VBox>
             </children>

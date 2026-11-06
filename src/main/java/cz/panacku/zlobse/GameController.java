@@ -401,7 +401,7 @@ public class GameController {
      */
     private void setDiceImage(int diceValue) {
         if (diceImageView == null) return;
-        InputStream is = getClass().getResourceAsStream("/images/kostka" + diceValue + ".png");
+        InputStream is = getClass().getResourceAsStream("/images/d6_red_" + diceValue + ".png");
         if (is != null) {
             diceImageView.setImage(new Image(is));
         }
@@ -417,11 +417,11 @@ public class GameController {
         // Načtení pozadí desky podle zvoleného počtu hráčů
         String imageName;
         if (targetPlayerCount == 2) {
-            imageName = "/images/deskapro2.png";
+            imageName = "/images/boardfor2.png";
         } else if (targetPlayerCount == 3) {
-            imageName = "/images/deskapro3.png";
+            imageName = "/images/boardfor3.png";
         } else {
-            imageName = "/images/deskapro4.png";
+            imageName = "/images/boardfor4.png";
         }
 
         InputStream is = getClass().getResourceAsStream(imageName);
