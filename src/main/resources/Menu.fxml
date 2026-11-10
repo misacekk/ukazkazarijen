@@ -47,7 +47,7 @@
                 <VBox alignment="CENTER" spacing="15.0" maxWidth="300.0">
                     <children>
                         <Button text="Hrát hru" onAction="#spustitHru" prefWidth="280.0" prefHeight="55.0" styleClass="btn-red-fantasy" style="-fx-font-size: 17px;" />
-                        <Button text="Schopnosti postav" onAction="#otevritLore" prefWidth="280.0" prefHeight="55.0" styleClass="btn-red-fantasy" style="-fx-font-size: 17px;" />
+                        <Button text="Postavy a Předměty" onAction="#otevritLore" prefWidth="280.0" prefHeight="55.0" styleClass="btn-red-fantasy" style="-fx-font-size: 17px;" />
                         <Button text="Pravidla hry" onAction="#otvritPravidla" prefWidth="280.0" prefHeight="55.0" styleClass="btn-red-fantasy" style="-fx-font-size: 17px;" />
                         <Button text="Ukončit hru" onAction="#ukoncitAplikaci" prefWidth="280.0" prefHeight="55.0" styleClass="btn-red-fantasy" style="-fx-font-size: 17px;" />
                     </children>

@@ -3,6 +3,8 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -13,298 +15,137 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="TOP_CENTER" spacing="15.0" prefHeight="750.0" prefWidth="950.0"
-      style="-fx-background-color: #121214;"
-      stylesheets="@style.css"
-      xmlns="http://javafx.com/javafx/17"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="cz.panacku.zlobse.LoreController">
+<ScrollPane fitToWidth="true" prefHeight="920.0" prefWidth="1000.0"
+            style="-fx-background-color: #121214; -fx-background: #121214;"
+            stylesheets="@style.css"
+            xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="cz.panacku.zlobse.LoreController">
 
-    <padding>
-        <Insets top="15.0" right="25.0" bottom="20.0" left="25.0" />
-    </padding>
+    <content>
+        <VBox alignment="TOP_CENTER" spacing="25.0" style="-fx-background-color: #121214;">
+            <padding>
+                <Insets top="15.0" right="25.0" bottom="30.0" left="25.0" />
+            </padding>
 
-    <children>
-        <!-- Tlačítko zpět -->
-        <HBox alignment="CENTER_LEFT" prefWidth="900.0">
             <children>
-                <Button text="← Zpět do Menu" onAction="#zpetDoMenu" prefHeight="34.0" prefWidth="140.0"
-                        styleClass="btn-red-fantasy" style="-fx-font-size: 12px;" />
+                <!-- Tlačítko zpět vlevo nahoře -->
+                <HBox alignment="CENTER_LEFT" prefWidth="950.0">
+                    <children>
+                        <Button text="← Zpět do Menu" onAction="#zpetDoMenu" prefHeight="34.0" prefWidth="140.0"
+                                styleClass="btn-red-fantasy" style="-fx-font-size: 12px; -fx-cursor: hand;" />
+                    </children>
+                </HBox>
+
+                <!-- SEKCE: HERNÍ POSTAVY -->
+                <VBox alignment="CENTER" spacing="6.0" maxWidth="950.0">
+                    <children>
+                        <Label text="HERNÍ POSTAVY" textFill="#FFD700">
+                            <font>
+                                <Font name="System Bold" size="24.0" />
+                            </font>
+                        </Label>
+                        <Separator maxWidth="200.0" styleClass="gold-separator" />
+                    </children>
+                </VBox>
+
+                <!-- MŘÍŽKA HRDINŮ -->
+                <GridPane hgap="15.0" vgap="25.0" maxWidth="950.0" alignment="CENTER">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="SOMETIMES" percentWidth="33.33" />
+                        <ColumnConstraints hgrow="SOMETIMES" percentWidth="33.33" />
+                        <ColumnConstraints hgrow="SOMETIMES" percentWidth="33.33" />
+                    </columnConstraints>
+                    <rowConstraints>
+                        <RowConstraints vgrow="SOMETIMES" />
+                        <RowConstraints vgrow="SOMETIMES" />
+                    </rowConstraints>
+                    <children>
+                        <!-- Karta 1: Rytíř -->
+                        <StackPane styleClass="card-container" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                            <ImageView fitHeight="230.0" preserveRatio="true" pickOnBounds="true">
+                                <image><Image url="@images/rytirnahled.png" /></image>
+                            </ImageView>
+                        </StackPane>
+
+                        <!-- Karta 2: Čarodějnice -->
+                        <StackPane styleClass="card-container" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                            <ImageView fitHeight="230.0" preserveRatio="true" pickOnBounds="true">
+                                <image><Image url="@images/carodejnicenahled.png" /></image>
+                            </ImageView>
+                        </StackPane>
+
+                        <!-- Karta 3: Bandita -->
+                        <StackPane styleClass="card-container" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                            <ImageView fitHeight="230.0" preserveRatio="true" pickOnBounds="true">
+                                <image><Image url="@images/banditanahled.png" /></image>
+                            </ImageView>
+                        </StackPane>
+
+                        <!-- Karta 4: Nekromant -->
+                        <StackPane styleClass="card-container" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                            <ImageView fitHeight="230.0" preserveRatio="true" pickOnBounds="true">
+                                <image><Image url="@images/nekromantnahled.png" /></image>
+                            </ImageView>
+                        </StackPane>
+
+                        <!-- Karta 5: Elfka -->
+                        <StackPane styleClass="card-container" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                            <ImageView fitHeight="230.0" preserveRatio="true" pickOnBounds="true">
+                                <image><Image url="@images/elfkanahled.png" /></image>
+                            </ImageView>
+                        </StackPane>
+
+                        <!-- Karta 6: Královna -->
+                        <StackPane styleClass="card-container" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                            <ImageView fitHeight="230.0" preserveRatio="true" pickOnBounds="true">
+                                <image><Image url="@images/kralovnanahled.png" /></image>
+                            </ImageView>
+                        </StackPane>
+                    </children>
+                </GridPane>
+
+                <!-- SEKCE: HERNÍ PŘEDMĚTY -->
+                <VBox alignment="CENTER" spacing="6.0" maxWidth="950.0">
+                    <padding>
+                        <Insets top="10.0" />
+                    </padding>
+                    <children>
+                        <Label text="HERNÍ PŘEDMĚTY" textFill="#FFD700">
+                            <font>
+                                <Font name="System Bold" size="24.0" />
+                            </font>
+                        </Label>
+                        <Separator maxWidth="200.0" styleClass="gold-separator" />
+                    </children>
+                </VBox>
+
+                <!-- PREZENTACE HERNÍCH PŘEDMĚTŮ -->
+                <HBox spacing="20.0" maxWidth="950.0" alignment="CENTER">
+                    <children>
+                        <!-- Teleport -->
+                        <StackPane styleClass="card-container">
+                            <ImageView fitHeight="220.0" preserveRatio="true" pickOnBounds="true">
+                                <image><Image url="@images/teleportnahled.png" /></image>
+                            </ImageView>
+                        </StackPane>
+
+                        <!-- Šťastná sedma -->
+                        <StackPane styleClass="card-container">
+                            <ImageView fitHeight="220.0" preserveRatio="true" pickOnBounds="true">
+                                <image><Image url="@images/sedmanahled.png" /></image>
+                            </ImageView>
+                        </StackPane>
+
+                        <!-- Čmajz -->
+                        <StackPane styleClass="card-container">
+                            <ImageView fitHeight="220.0" preserveRatio="true" pickOnBounds="true">
+                                <image><Image url="@images/cmajznahled.png" /></image>
+                            </ImageView>
+                        </StackPane>
+                    </children>
+                </HBox>
             </children>
-        </HBox>
-
-        <Label text="POSTAVY A SCHOPNOSTI" textFill="#FFD700">
-            <font>
-                <Font name="System Bold" size="22.0" />
-            </font>
-        </Label>
-
-        <!-- MŘÍŽKA HRDINŮ -->
-        <GridPane hgap="15.0" vgap="15.0" maxWidth="900.0" prefHeight="360.0">
-            <columnConstraints>
-                <ColumnConstraints hgrow="SOMETIMES" percentWidth="33.33" />
-                <ColumnConstraints hgrow="SOMETIMES" percentWidth="33.33" />
-                <ColumnConstraints hgrow="SOMETIMES" percentWidth="33.33" />
-            </columnConstraints>
-            <rowConstraints>
-                <RowConstraints vgrow="SOMETIMES" percentHeight="50.0" />
-                <RowConstraints vgrow="SOMETIMES" percentHeight="50.0" />
-            </rowConstraints>
-            <children>
-
-                <!-- Karta 1: Rytíř -->
-                <StackPane GridPane.columnIndex="0" GridPane.rowIndex="0">
-                    <children>
-                        <ImageView fitWidth="280.0" fitHeight="165.0" preserveRatio="false" pickOnBounds="true">
-                            <image><Image url="@images/paper.png" /></image>
-                        </ImageView>
-                        <VBox spacing="4.0" style="-fx-padding: 20px 25px;">
-                            <children>
-                                <HBox spacing="10.0" alignment="CENTER_LEFT">
-                                    <children>
-                                        <ImageView fitHeight="36.0" fitWidth="36.0" pickOnBounds="true" preserveRatio="true">
-                                            <image><Image url="@images/rytir.png" /></image>
-                                        </ImageView>
-                                        <VBox alignment="CENTER_LEFT">
-                                            <children>
-                                                <Label text="Rytíř" style="-fx-text-fill: #9a0f14; -fx-font-weight: bold; -fx-font-size: 15px;" />
-                                                <Label text="Pasivní: Ocelový štít" styleClass="scroll-title" style="-fx-font-size: 11px;" />
-                                            </children>
-                                        </VBox>
-                                    </children>
-                                </HBox>
-                                <Label text="Zblokuje vyhození svým štítem." styleClass="scroll-text" wrapText="true">
-                                    <VBox.margin><Insets top="4.0" /></VBox.margin>
-                                    <font><Font size="11.5" /></font>
-                                </Label>
-                            </children>
-                        </VBox>
-                    </children>
-                </StackPane>
-
-                <!-- Karta 2: Čarodějnice -->
-                <StackPane GridPane.columnIndex="1" GridPane.rowIndex="0">
-                    <children>
-                        <ImageView fitWidth="280.0" fitHeight="165.0" preserveRatio="false" pickOnBounds="true">
-                            <image><Image url="@images/paper.png" /></image>
-                        </ImageView>
-                        <VBox spacing="4.0" style="-fx-padding: 20px 25px;">
-                            <children>
-                                <HBox spacing="10.0" alignment="CENTER_LEFT">
-                                    <children>
-                                        <ImageView fitHeight="36.0" fitWidth="36.0" pickOnBounds="true" preserveRatio="true">
-                                            <image><Image url="@images/witch.png" /></image>
-                                        </ImageView>
-                                        <VBox alignment="CENTER_LEFT">
-                                            <children>
-                                                <Label text="Čarodějnice" style="-fx-text-fill: #095088; -fx-font-weight: bold; -fx-font-size: 15px;" />
-                                                <Label text="Aktivní: Dvojitý hod" styleClass="scroll-title" style="-fx-font-size: 11px;" />
-                                            </children>
-                                        </VBox>
-                                    </children>
-                                </HBox>
-                                <Label text="Následující hod kostkou se zdvojnásobí." styleClass="scroll-text" wrapText="true">
-                                    <VBox.margin><Insets top="4.0" /></VBox.margin>
-                                    <font><Font size="11.5" /></font>
-                                </Label>
-                            </children>
-                        </VBox>
-                    </children>
-                </StackPane>
-
-                <!-- Karta 3: Bandita -->
-                <StackPane GridPane.columnIndex="2" GridPane.rowIndex="0">
-                    <children>
-                        <ImageView fitWidth="280.0" fitHeight="165.0" preserveRatio="false" pickOnBounds="true">
-                            <image><Image url="@images/paper.png" /></image>
-                        </ImageView>
-                        <VBox spacing="4.0" style="-fx-padding: 20px 25px;">
-                            <children>
-                                <HBox spacing="10.0" alignment="CENTER_LEFT">
-                                    <children>
-                                        <ImageView fitHeight="36.0" fitWidth="36.0" pickOnBounds="true" preserveRatio="true">
-                                            <image><Image url="@images/bandita.png" /></image>
-                                        </ImageView>
-                                        <VBox alignment="CENTER_LEFT">
-                                            <children>
-                                                <Label text="Bandita" style="-fx-text-fill: #14612d; -fx-font-weight: bold; -fx-font-size: 15px;" />
-                                                <Label text="Aktivní: Krádež tahu" styleClass="scroll-title" style="-fx-font-size: 11px;" />
-                                            </children>
-                                        </VBox>
-                                    </children>
-                                </HBox>
-                                <Label text="Ukradne tah následujícímu hráči." styleClass="scroll-text" wrapText="true">
-                                    <VBox.margin><Insets top="4.0" /></VBox.margin>
-                                    <font><Font size="11.5" /></font>
-                                </Label>
-                            </children>
-                        </VBox>
-                    </children>
-                </StackPane>
-
-                <!-- Karta 4: Nekromant -->
-                <StackPane GridPane.columnIndex="0" GridPane.rowIndex="1">
-                    <children>
-                        <ImageView fitWidth="280.0" fitHeight="165.0" preserveRatio="false" pickOnBounds="true">
-                            <image><Image url="@images/paper.png" /></image>
-                        </ImageView>
-                        <VBox spacing="4.0" style="-fx-padding: 20px 25px;">
-                            <children>
-                                <HBox spacing="10.0" alignment="CENTER_LEFT">
-                                    <children>
-                                        <ImageView fitHeight="36.0" fitWidth="36.0" pickOnBounds="true" preserveRatio="true">
-                                            <image><Image url="@images/nekromant.png" /></image>
-                                        </ImageView>
-                                        <VBox alignment="CENTER_LEFT">
-                                            <children>
-                                                <Label text="Nekromant" style="-fx-text-fill: #995200; -fx-font-weight: bold; -fx-font-size: 15px;" />
-                                                <Label text="Pasivní: Reanimace" styleClass="scroll-title" style="-fx-font-size: 11px;" />
-                                            </children>
-                                        </VBox>
-                                    </children>
-                                </HBox>
-                                <Label text="Po vyhození se vrátí na start místo spawnu." styleClass="scroll-text" wrapText="true">
-                                    <VBox.margin><Insets top="4.0" /></VBox.margin>
-                                    <font><Font size="11.5" /></font>
-                                </Label>
-                            </children>
-                        </VBox>
-                    </children>
-                </StackPane>
-
-                <!-- Karta 5: Elfka -->
-                <StackPane GridPane.columnIndex="1" GridPane.rowIndex="1">
-                    <children>
-                        <ImageView fitWidth="280.0" fitHeight="165.0" preserveRatio="false" pickOnBounds="true">
-                            <image><Image url="@images/paper.png" /></image>
-                        </ImageView>
-                        <VBox spacing="4.0" style="-fx-padding: 20px 25px;">
-                            <children>
-                                <HBox spacing="10.0" alignment="CENTER_LEFT">
-                                    <children>
-                                        <ImageView fitHeight="36.0" fitWidth="36.0" pickOnBounds="true" preserveRatio="true">
-                                            <image><Image url="@images/elf.png" /></image>
-                                        </ImageView>
-                                        <VBox alignment="CENTER_LEFT">
-                                            <children>
-                                                <Label text="Elfka" style="-fx-text-fill: #1a22a3; -fx-font-weight: bold; -fx-font-size: 15px;" />
-                                                <Label text="Aktivní: Elfí šíp" styleClass="scroll-title" style="-fx-font-size: 11px;" />
-                                            </children>
-                                        </VBox>
-                                    </children>
-                                </HBox>
-                                <Label text="Odrazí pronásledovatele (až 3 pole za sebou) o 3 pole zpět." styleClass="scroll-text" wrapText="true">
-                                    <VBox.margin><Insets top="4.0" /></VBox.margin>
-                                    <font><Font size="11.5" /></font>
-                                </Label>
-                            </children>
-                        </VBox>
-                    </children>
-                </StackPane>
-
-                <!-- Karta 6: Královna -->
-                <StackPane GridPane.columnIndex="2" GridPane.rowIndex="1">
-                    <children>
-                        <ImageView fitWidth="280.0" fitHeight="165.0" preserveRatio="false" pickOnBounds="true">
-                            <image><Image url="@images/paper.png" /></image>
-                        </ImageView>
-                        <VBox spacing="4.0" style="-fx-padding: 20px 25px;">
-                            <children>
-                                <HBox spacing="10.0" alignment="CENTER_LEFT">
-                                    <children>
-                                        <ImageView fitHeight="36.0" fitWidth="36.0" pickOnBounds="true" preserveRatio="true">
-                                            <image><Image url="@images/queen.png" /></image>
-                                        </ImageView>
-                                        <VBox alignment="CENTER_LEFT">
-                                            <children>
-                                                <Label text="Královna" style="-fx-text-fill: #8b1652; -fx-font-weight: bold; -fx-font-size: 15px;" />
-                                                <Label text="Pasivní: Královská imunita" styleClass="scroll-title" style="-fx-font-size: 11px;" />
-                                            </children>
-                                        </VBox>
-                                    </children>
-                                </HBox>
-                                <Label text="Imunní vůči schopnostem hrdinů (předměty fungují)." styleClass="scroll-text" wrapText="true">
-                                    <VBox.margin><Insets top="4.0" /></VBox.margin>
-                                    <font><Font size="11.5" /></font>
-                                </Label>
-                            </children>
-                        </VBox>
-                    </children>
-                </StackPane>
-
-            </children>
-        </GridPane>
-
-        <!-- Nadpis sekce předmětů -->
-        <Label text="HERNÍ PŘEDMĚTY" textFill="#FFD700">
-            <font>
-                <Font name="System Bold" size="18.0" />
-            </font>
-            <VBox.margin>
-                <Insets top="10.0" />
-            </VBox.margin>
-        </Label>
-
-        <!-- PREZENTACE HERNÍCH PŘEDMĚTŮ -->
-        <HBox spacing="20.0" maxWidth="900.0" alignment="CENTER">
-            <children>
-                <!-- Teleport -->
-                <StackPane prefWidth="280.0" prefHeight="130.0">
-                    <children>
-                        <ImageView fitWidth="280.0" fitHeight="130.0" preserveRatio="false" pickOnBounds="true">
-                            <image><Image url="@images/paper.png" /></image>
-                        </ImageView>
-                        <VBox alignment="TOP_CENTER" spacing="4.0" style="-fx-padding: 15px 20px;">
-                            <children>
-                                <ImageView fitHeight="34.0" fitWidth="34.0" pickOnBounds="true" preserveRatio="true">
-                                    <image><Image url="@images/teleport.png" /></image>
-                                </ImageView>
-                                <Label text="Teleport" style="-fx-text-fill: #095088; -fx-font-weight: bold; -fx-font-size: 13px;" />
-                                <Label text="Ihned prohodí pozici figurky hráče s nejbližší figurkou soupeře na herním plánu."
-                                       styleClass="scroll-text" wrapText="true" alignment="CENTER" textAlignment="CENTER"><font><Font size="10.5" /></font></Label>
-                            </children>
-                        </VBox>
-                    </children>
-                </StackPane>
-
-                <!-- Šťastná sedma -->
-                <StackPane prefWidth="280.0" prefHeight="130.0">
-                    <children>
-                        <ImageView fitWidth="280.0" fitHeight="130.0" preserveRatio="false" pickOnBounds="true">
-                            <image><Image url="@images/paper.png" /></image>
-                        </ImageView>
-                        <VBox alignment="TOP_CENTER" spacing="4.0" style="-fx-padding: 15px 20px;">
-                            <children>
-                                <ImageView fitHeight="34.0" fitWidth="34.0" pickOnBounds="true" preserveRatio="true">
-                                    <image><Image url="@images/stastna_sedma.png" /></image>
-                                </ImageView>
-                                <Label text="Šťastná sedma" style="-fx-text-fill: #14612d; -fx-font-weight: bold; -fx-font-size: 13px;" />
-                                <Label text="Hráčova figurka se posune o 7 garantovaných políček dopředu."
-                                       styleClass="scroll-text" wrapText="true" alignment="CENTER" textAlignment="CENTER"><font><Font size="10.5" /></font></Label>
-                            </children>
-                        </VBox>
-                    </children>
-                </StackPane>
-
-                <!-- Čmajz -->
-                <StackPane prefWidth="280.0" prefHeight="130.0">
-                    <children>
-                        <ImageView fitWidth="280.0" fitHeight="130.0" preserveRatio="false" pickOnBounds="true">
-                            <image><Image url="@images/paper.png" /></image>
-                        </ImageView>
-                        <VBox alignment="TOP_CENTER" spacing="4.0" style="-fx-padding: 15px 20px;">
-                            <children>
-                                <ImageView fitHeight="34.0" fitWidth="34.0" pickOnBounds="true" preserveRatio="true">
-                                    <image><Image url="@images/cmajz.png" /></image>
-                                </ImageView>
-                                <Label text="Čmajz" style="-fx-text-fill: #9a0f14; -fx-font-weight: bold; -fx-font-size: 13px;" />
-                                <Label text="Umožní náhodně vybrat protihráče a ukrást mu předmět přímo z jeho inventáře."
-                                       styleClass="scroll-text" wrapText="true" alignment="CENTER" textAlignment="CENTER"><font><Font size="10.5" /></font></Label>
-                            </children>
-                        </VBox>
-                    </children>
-                </StackPane>
-            </children>
-        </HBox>
-    </children>
-</VBox>
+        </VBox>
+    </content>
+</ScrollPane>

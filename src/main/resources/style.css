@@ -95,3 +95,37 @@
 .scroll-text {
     -fx-text-fill: #2c1a0c;
 }
+
+/* Průhledný ScrollPane bez ohraničení */
+.scroll-pane {
+    -fx-background-color: #121214;
+    -fx-border-color: transparent;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: #121214;
+}
+
+/* Obal pro karty bez čar v základním stavu */
+.card-container {
+    -fx-padding: 4px;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.6), 10, 0, 0, 4);
+}
+
+/* Zvýraznění při najetí myší (zlatá záře + lehký posun) */
+.card-container:hover {
+    -fx-effect: dropshadow(three-pass-box, rgba(255, 215, 0, 0.6), 18, 0, 0, 0);
+    -fx-scale-x: 1.04;
+    -fx-scale-y: 1.04;
+}
+
+/* Zlaté podtržení nadpisů */
+.gold-separator .line {
+    -fx-border-color: #FFD700;
+    -fx-border-width: 1px;
+    -fx-opacity: 0.35;
+}
